@@ -12,8 +12,10 @@ import { clienteConSesion, haySupabase } from './lib/supabase';
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   const ruta = context.url.pathname;
-  if (!ruta.startsWith('/admin')) return next();
+  const esApi = ruta.startsWith('/api');
+  if (!ruta.startsWith('/admin') && !esApi) return next();
   if (ruta === '/admin/login' || ruta.startsWith('/admin/callback')) return next();
+  if (ruta === '/api/sesion') return next();
 
   if (!haySupabase) {
     return new Response(
@@ -22,12 +24,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
+  /** Las páginas mandan al login; las llamadas fetch necesitan un 401 limpio. */
+  const fuera = (motivo: string, destino: string) =>
+    esApi
+      ? new Response(motivo, { status: 401, headers: { 'content-type': 'text/plain; charset=utf-8' } })
+      : context.redirect(destino);
+
+  const access = context.cookies.get('sb-access-token')?.value;
+  if (!access) return fuera('Sin sesión', '/admin/login');
+
   const db = clienteConSesion(context.cookies)!;
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return context.redirect('/admin/login');
+  const { data: { user }, error } = await db.auth.getUser(access);
+  if (error || !user) return fuera('Sesión caducada', '/admin/login');
 
   const { data: admin } = await db.from('admins').select('email').eq('email', user.email).maybeSingle();
-  if (!admin) return context.redirect('/admin/login?error=sin-permiso');
+  if (!admin) return fuera('Sin permiso', '/admin/login?error=sin-permiso');
 
   context.locals.usuario = { email: user.email!, nombre: user.user_metadata?.full_name ?? user.email! };
   context.locals.db = db;

@@ -13,8 +13,7 @@ create table if not exists admins (
 
 -- ¡CAMBIA ESTOS CORREOS POR LOS VUESTROS!
 insert into admins (email, nombre) values
-  ('tu-correo@gmail.com', 'Guille'),
-  ('el-otro-correo@gmail.com', 'La otra persona')
+  ('tu-correo@gmail.com', 'Tu nombre')
 on conflict (email) do nothing;
 
 create or replace function es_admin()
