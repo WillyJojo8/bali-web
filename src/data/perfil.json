@@ -1,0 +1,14 @@
+{
+  "nombre": "Bali",
+  "titulo": "Bali · caniche toy",
+  "descripcion": "Bali, caniche toy chocolate. Códigos de descuento, reseñas de productos para perros y el día a día.",
+  "bio": "Pruebo cosas de perro. Las que me gustan de verdad, te las dejo más baratas.",
+  "raza": "Caniche toy",
+  "color": "Chocolate",
+  "pais": "España",
+  "email": "hola@ejemplo.com",
+  "redes": [
+    { "nombre": "Instagram", "usuario": "@bali_the_poodletoy", "url": "https://www.instagram.com/bali_the_poodletoy", "icono": "◉" },
+    { "nombre": "TikTok", "usuario": "@bali_the_poodletoy", "url": "https://www.tiktok.com/@bali_the_poodletoy", "icono": "♪" }
+  ]
+}

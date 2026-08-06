@@ -1,0 +1,54 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  url: string;
+  titulo: string;
+  resumen: string;
+  fecha: Date;
+  portada?: ImageMetadata;
+  portadaAlt?: string;
+  etiquetas?: string[];
+}
+const { url, titulo, resumen, fecha, portada, portadaAlt, etiquetas = [] } = Astro.props;
+const legible = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<article class="tarjeta">
+  <a class="tarjeta__link" href={url}>
+    {portada && (
+      <div class="tarjeta__foto">
+        <Image src={portada} alt={portadaAlt ?? ''} widths={[320, 640]} sizes="(max-width:640px) 100vw, 300px" />
+      </div>
+    )}
+    <div class="tarjeta__texto">
+      <time class="tarjeta__fecha" datetime={fecha.toISOString()}>{legible}</time>
+      <h3 class="tarjeta__titulo">{titulo}</h3>
+      <p class="tarjeta__resumen">{resumen}</p>
+      {etiquetas.length > 0 && (
+        <ul class="tarjeta__tags">
+          {etiquetas.map((t) => <li>{t}</li>)}
+        </ul>
+      )}
+    </div>
+  </a>
+</article>
+
+<style>
+  .tarjeta{background:var(--card);border-radius:var(--radio);overflow:hidden;
+    transition:background .16s ease,transform .16s ease}
+  .tarjeta:hover{background:var(--card-2);transform:translateY(-2px)}
+  .tarjeta__link{display:grid;grid-template-columns:118px 1fr;gap:0;text-decoration:none;color:inherit}
+  .tarjeta:not(:has(.tarjeta__foto)) .tarjeta__link{grid-template-columns:1fr}
+  .tarjeta__foto{aspect-ratio:1;overflow:hidden;background:var(--bg-2)}
+  .tarjeta__foto :global(img){width:100%;height:100%;object-fit:cover}
+  .tarjeta__texto{padding:15px 16px;min-width:0}
+  .tarjeta__fecha{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--tang)}
+  .tarjeta__titulo{font-size:18px;line-height:1.25;margin:5px 0 6px;font-weight:600}
+  .tarjeta__resumen{font-size:14px;color:var(--cream-dim);margin:0;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tarjeta__tags{display:flex;gap:6px;flex-wrap:wrap;list-style:none;padding:0;margin:9px 0 0}
+  .tarjeta__tags li{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+    text-transform:uppercase;border:1px solid var(--linea);border-radius:100px;
+    padding:3px 8px;color:var(--cream-dim)}
+</style>

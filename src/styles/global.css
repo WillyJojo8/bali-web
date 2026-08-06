@@ -1,0 +1,58 @@
+/* ==========================================================
+   Sistema de diseño — Bali
+   Paleta sacada del propio perro: pelo chocolate, arnés de
+   corazones fucsia/naranja, chapa del collar verde.
+   ========================================================== */
+:root{
+  --bg:#1B0F0A;
+  --bg-2:#2A1810;
+  --card:#332016;
+  --card-2:#3D2820;
+  --cream:#FFF3E9;
+  --cream-dim:#C6A895;
+  --pink:#FF2E63;
+  --tang:#FF9F1C;
+  --mint:#3DDC97;
+  --linea:rgba(255,243,233,.12);
+
+  --pad:clamp(18px,5vw,32px);
+  --ancho:660px;
+  --radio:16px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--cream);
+  font-family:"Instrument Sans",system-ui,-apple-system,sans-serif;
+  font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--tang);outline-offset:3px}
+
+.wrap{max-width:var(--ancho);margin:0 auto;padding:0 var(--pad)}
+.display{font-family:"Anybody","Arial Black",system-ui,sans-serif;
+  font-variation-settings:"wdth" 128;font-weight:800;letter-spacing:-.03em;line-height:.86}
+.mono{font-family:"Space Mono",monospace}
+.eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--tang);margin:0}
+
+.seccion{margin:64px 0}
+.seccion__head{margin-bottom:22px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.seccion__head h2{font-size:clamp(32px,9vw,46px);margin:6px 0 0}
+.seccion__meta{font-family:"Space Mono",monospace;font-size:12px;color:var(--cream-dim);white-space:nowrap;padding-bottom:6px}
+
+.aviso{
+  background:var(--bg-2);border-left:3px solid var(--tang);border-radius:0 10px 10px 0;
+  padding:12px 16px;font-size:14px;color:var(--cream-dim);margin:0 0 28px;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

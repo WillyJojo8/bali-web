@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import perfil from '../data/perfil.json';
+---
+<Base titulo="Aviso legal" descripcion="Aviso legal y política de afiliación.">
+  <section class="legal">
+    <h1 class="display">AVISO LEGAL</h1>
+
+    <p class="aviso">
+      PENDIENTE: rellena los datos del titular antes de publicar. En España,
+      la LSSI obliga a identificar al responsable del sitio (nombre o razón
+      social, NIF, dirección y correo de contacto).
+    </p>
+
+    <h2>Titular</h2>
+    <p>[Nombre y apellidos o razón social] · NIF [—] · [Dirección] · {perfil.email}</p>
+
+    <h2>Enlaces de afiliado y contenido patrocinado</h2>
+    <p>
+      Esta web contiene enlaces de afiliado y códigos de descuento. Cuando compras
+      a través de ellos, el titular puede recibir una comisión sin coste adicional
+      para ti. Las entradas que incluyen producto cedido o pagado por una marca se
+      señalan de forma visible al principio del artículo.
+    </p>
+
+    <h2>Publicidad</h2>
+    <p>
+      Esta web puede mostrar anuncios servidos por terceros. Consulta la
+      <a href="/privacidad/">política de privacidad</a> para saber qué datos tratan.
+    </p>
+
+    <h2>Propiedad intelectual</h2>
+    <p>
+      Las fotografías y los textos son propiedad del titular. No se permite su
+      reproducción sin autorización.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .legal{padding:36px 0;max-width:60ch}
+  .legal h1{font-size:clamp(34px,9vw,50px);margin:0 0 24px}
+  .legal h2{font-size:20px;font-weight:600;margin:32px 0 8px}
+  .legal p{color:var(--cream-dim);margin:0 0 14px}
+  .legal a{color:var(--tang)}
+</style>

@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import TicketCodigo from '../components/TicketCodigo.astro';
+import HuecoAnuncio from '../components/HuecoAnuncio.astro';
+import codigos from '../data/codigos.json';
+
+const activos = codigos.filter((c) => c.activo);
+---
+<Base titulo="Códigos de descuento" descripcion="Todos los códigos de descuento activos de Bali.">
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Toca y se copia solo</p>
+        <h2 class="display">CÓDIGOS</h2>
+      </div>
+      <span class="seccion__meta">{activos.length} activos</span>
+    </div>
+
+    <p class="aviso">
+      Algunos enlaces son de afiliado: si compras usando el código, Bali se lleva
+      una comisión sin que a ti te cueste más.
+    </p>
+
+    <div class="lista">
+      {activos.map((c) => <TicketCodigo {...c} />)}
+    </div>
+  </section>
+
+  <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+</Base>
+
+<style>
+  .lista{display:flex;flex-direction:column;gap:14px}
+</style>

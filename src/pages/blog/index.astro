@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import TarjetaPost from '../../components/TarjetaPost.astro';
+import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
+
+const posts = (await getCollection('posts', ({ data }) => !data.borrador))
+  .sort((a, b) => b.data.fecha.valueOf() - a.data.fecha.valueOf());
+---
+<Base titulo="Blog" descripcion="Reseñas, trucos y el día a día de Bali.">
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Todo lo publicado</p>
+        <h2 class="display">BLOG</h2>
+      </div>
+      <span class="seccion__meta">{posts.length} {posts.length === 1 ? 'entrada' : 'entradas'}</span>
+    </div>
+
+    {posts.length === 0 ? (
+      <p class="vacio">Todavía no hay entradas.</p>
+    ) : (
+      <div class="lista">
+        {posts.map((p, i) => (
+          <>
+            <TarjetaPost url={`/blog/${p.id}/`} titulo={p.data.titulo} resumen={p.data.resumen}
+              fecha={p.data.fecha} portada={p.data.portada} portadaAlt={p.data.portadaAlt}
+              etiquetas={p.data.etiquetas} />
+            {i === 4 && <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />}
+          </>
+        ))}
+      </div>
+    )}
+  </section>
+</Base>
+
+<style>
+  .lista{display:flex;flex-direction:column;gap:14px}
+  .vacio{color:var(--cream-dim)}
+</style>

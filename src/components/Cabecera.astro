@@ -1,0 +1,43 @@
+---
+import perfil from '../data/perfil.json';
+import codigos from '../data/codigos.json';
+
+const activos = codigos.filter((c) => c.activo);
+const cinta = activos.map((c) => `${c.codigo} · −${c.valor}${c.unidad.includes('€') ? '€' : '%'}`).join(' · ');
+const ruta = Astro.url.pathname;
+---
+<div class="cinta" aria-hidden="true">
+  <div class="cinta__track">
+    <span>{cinta} · {cinta} · </span>
+    <span>{cinta} · {cinta} · </span>
+  </div>
+</div>
+
+<header class="nav">
+  <div class="nav__in wrap">
+    <a class="nav__logo display" href="/">{perfil.nombre}</a>
+    <nav aria-label="Principal">
+      <a href="/" class:list={['nav__link', { on: ruta === '/' }]}>Inicio</a>
+      <a href="/codigos/" class:list={['nav__link', { on: ruta.startsWith('/codigos') }]}>Códigos</a>
+      <a href="/blog/" class:list={['nav__link', { on: ruta.startsWith('/blog') }]}>Blog</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .cinta{overflow:hidden;background:var(--pink);padding:8px 0}
+  .cinta__track{display:flex;width:max-content;animation:desliza 30s linear infinite}
+  .cinta span{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.16em;
+    text-transform:uppercase;white-space:nowrap;padding-right:24px;color:#fff}
+  @keyframes desliza{to{transform:translateX(-50%)}}
+
+  .nav{border-bottom:1px solid var(--linea);position:sticky;top:0;z-index:40;
+    background:rgba(27,15,10,.9);backdrop-filter:blur(10px)}
+  .nav__in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+  .nav__logo{font-size:26px;text-decoration:none}
+  .nav nav{display:flex;gap:16px}
+  .nav__link{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;text-decoration:none;color:var(--cream-dim);padding:4px 0}
+  .nav__link:hover{color:var(--cream)}
+  .nav__link.on{color:var(--tang);border-bottom:2px solid var(--tang)}
+</style>

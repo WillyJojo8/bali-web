@@ -1,0 +1,84 @@
+---
+interface Props {
+  marca: string;
+  valor: string;
+  unidad: string;
+  codigo: string;
+  que: string;
+  url: string;
+}
+const { marca, valor, unidad, codigo, que, url } = Astro.props;
+---
+<article class="ticket" data-codigo={codigo}>
+  <div class="ticket__talon">
+    <span class="ticket__valor">{valor}</span>
+    <span class="ticket__unidad">{unidad}</span>
+  </div>
+  <div class="ticket__cuerpo">
+    <h3 class="ticket__marca">{marca}</h3>
+    <p class="ticket__que">{que}</p>
+    <div class="ticket__fila">
+      <span class="ticket__codigo">{codigo}</span>
+      <button class="ticket__copiar" type="button">Copiar</button>
+    </div>
+    <a class="ticket__ir" href={url} target="_blank" rel="noopener sponsored">Ir a la tienda →</a>
+  </div>
+</article>
+
+<style>
+  .ticket{display:grid;grid-template-columns:100px 1fr;background:var(--card);
+    border-radius:18px;overflow:hidden;box-shadow:0 14px 30px -18px #000}
+  .ticket__talon{background:var(--pink);color:#fff;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;padding:22px 8px;position:relative}
+  .ticket:nth-of-type(3n+2) .ticket__talon{background:var(--tang);color:#2A1810}
+  .ticket:nth-of-type(3n+3) .ticket__talon{background:var(--mint);color:#132a20}
+  .ticket__talon::after{content:"";position:absolute;right:-1px;top:0;bottom:0;width:2px;
+    background-image:linear-gradient(var(--bg) 50%,transparent 0);background-size:2px 11px}
+  .ticket__valor{font-family:"Anybody","Arial Black",sans-serif;font-variation-settings:"wdth" 120;
+    font-weight:900;font-size:34px;line-height:.9;letter-spacing:-.03em}
+  .ticket__unidad{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;opacity:.85}
+  .ticket__cuerpo{padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .ticket__marca{font-size:16px;font-weight:600;margin:0}
+  .ticket__que{font-size:13.5px;color:var(--cream-dim);margin:0}
+  .ticket__fila{display:flex;align-items:center;gap:10px;margin-top:2px}
+  .ticket__codigo{font-family:"Space Mono",monospace;font-weight:700;font-size:19px;
+    letter-spacing:.04em;border:2px dashed rgba(255,243,233,.3);border-radius:9px;
+    padding:7px 12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ticket__copiar{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;background:var(--cream);color:var(--bg);border:0;border-radius:9px;
+    padding:10px 13px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .ticket.copiado .ticket__copiar{background:var(--mint);color:#132a20}
+  .ticket.copiado .ticket__codigo{border-color:var(--mint);border-style:solid}
+  .ticket__ir{font-size:13.5px;color:var(--tang);font-weight:600;text-decoration:none;align-self:flex-start}
+  .ticket__ir:hover{text-decoration:underline;text-underline-offset:3px}
+</style>
+
+<script>
+  // Se ejecuta una vez por página, aunque haya varios tickets.
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.ticket__copiar');
+    if (!btn) return;
+    const ticket = btn.closest('.ticket') as HTMLElement;
+    const codigo = ticket.dataset.codigo ?? '';
+
+    const marcar = () => {
+      ticket.classList.add('copiado');
+      btn.textContent = '¡Copiado!';
+      setTimeout(() => {
+        ticket.classList.remove('copiado');
+        btn.textContent = 'Copiar';
+      }, 2000);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(codigo).finally(marcar);
+    } else {
+      const t = document.createElement('textarea');
+      t.value = codigo; t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } catch {}
+      t.remove(); marcar();
+    }
+  });
+</script>

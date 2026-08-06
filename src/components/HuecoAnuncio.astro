@@ -1,0 +1,48 @@
+---
+/*
+  Hueco de anuncio.
+
+  Si no hay PUBLIC_ADSENSE_ID en las variables de entorno, este
+  componente no pinta NADA. Así puedes desarrollar y desplegar sin
+  anuncios, y activarlos el día que AdSense te apruebe sin tocar
+  ninguna plantilla.
+
+  El hueco reserva su altura siempre que se muestra, para que el
+  texto no dé un salto cuando carga el anuncio.
+*/
+interface Props {
+  slot?: string;
+  alto?: number;
+}
+const { slot, alto = 250 } = Astro.props;
+const cliente = import.meta.env.PUBLIC_ADSENSE_ID;
+const mostrar = Boolean(cliente && slot);
+---
+{mostrar && (
+  <aside class="anuncio" style={`--alto:${alto}px`}>
+    <span class="anuncio__etiqueta">Publicidad</span>
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client={cliente}
+      data-ad-slot={slot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    ></ins>
+    <script is:inline>
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </aside>
+)}
+
+<style>
+  .anuncio{
+    margin:44px 0;min-height:var(--alto);
+    border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+    padding:12px 0;
+  }
+  .anuncio__etiqueta{
+    display:block;font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(255,243,233,.28);margin-bottom:8px;text-align:center;
+  }
+</style>

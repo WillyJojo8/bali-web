@@ -1,0 +1,132 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import TicketCodigo from '../components/TicketCodigo.astro';
+import TarjetaPost from '../components/TarjetaPost.astro';
+import HuecoAnuncio from '../components/HuecoAnuncio.astro';
+import perfil from '../data/perfil.json';
+import codigos from '../data/codigos.json';
+import { Image } from 'astro:assets';
+import retrato from '../assets/bali-1.jpg';
+
+const activos = codigos.filter((c) => c.activo);
+const destacado = activos.find((c) => c.destacado) ?? activos[0];
+
+const posts = (await getCollection('posts', ({ data }) => !data.borrador))
+  .sort((a, b) => b.data.fecha.valueOf() - a.data.fecha.valueOf())
+  .slice(0, 4);
+---
+<Base>
+  <section class="hero">
+    <div class="hero__aro">
+      <Image class="hero__foto" src={retrato} alt={`${perfil.nombre}, ${perfil.raza.toLowerCase()} color ${perfil.color.toLowerCase()}`} widths={[280, 560]} sizes="min(78vw, 300px)" />
+      {destacado && (
+        <svg class="hero__sello" viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <path id="aro" fill="none" d="M100,100 m-92,0 a92,92 0 1,1 184,0 a92,92 0 1,1 -184,0" />
+          </defs>
+          <text>
+            <textPath href="#aro" startOffset="0">
+              {`CÓDIGO ${destacado.codigo} · ${destacado.valor}${destacado.unidad} · CÓDIGO ${destacado.codigo} · ${destacado.valor}${destacado.unidad} · `}
+            </textPath>
+          </text>
+        </svg>
+      )}
+    </div>
+
+    <h1 class="hero__nombre display">BA<em>LI</em></h1>
+    <p class="hero__bio">{perfil.bio}</p>
+    <ul class="hero__chips">
+      <li>{perfil.raza}</li>
+      <li>{perfil.color}</li>
+      <li>{perfil.pais}</li>
+    </ul>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Lo que has venido a buscar</p>
+        <h2 class="display">CÓDIGOS</h2>
+      </div>
+      <span class="seccion__meta">{activos.length} activos</span>
+    </div>
+    <div class="lista">
+      {activos.map((c) => <TicketCodigo {...c} />)}
+    </div>
+  </section>
+
+  <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Lo último</p>
+        <h2 class="display">BLOG</h2>
+      </div>
+      <a class="seccion__meta" href="/blog/">Ver todo →</a>
+    </div>
+    {posts.length === 0 ? (
+      <p class="vacio">Todavía no hay entradas. La primera irá en <code>src/content/posts/</code>.</p>
+    ) : (
+      <div class="lista">
+        {posts.map((p) => (
+          <TarjetaPost url={`/blog/${p.id}/`} titulo={p.data.titulo} resumen={p.data.resumen}
+            fecha={p.data.fecha} portada={p.data.portada} portadaAlt={p.data.portadaAlt}
+            etiquetas={p.data.etiquetas} />
+        ))}
+      </div>
+    )}
+  </section>
+
+  <section class="seccion">
+    <div class="seccion__head"><div><h2 class="display">REDES</h2></div></div>
+    <div class="redes">
+      {perfil.redes.map((r) => (
+        <a class="red" href={r.url} target="_blank" rel="noopener">
+          <span class="red__icono">{r.icono}</span>
+          <span>{r.nombre}<span class="red__sub">{r.usuario}</span></span>
+          <span class="red__ir">→</span>
+        </a>
+      ))}
+      <a class="red" href={`mailto:${perfil.email}`}>
+        <span class="red__icono">✉</span>
+        <span>Colaboraciones<span class="red__sub">{perfil.email}</span></span>
+        <span class="red__ir">→</span>
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero{padding:40px 0 4px;text-align:center}
+  .hero__aro{position:relative;width:min(78vw,300px);margin:0 auto}
+  .hero__aro::before{content:"";display:block;padding-top:100%}
+  .hero__foto{position:absolute;inset:9%;border-radius:50%;width:82%;height:82%;object-fit:cover;
+    object-position:50% 16%;box-shadow:0 0 0 5px var(--bg),0 0 0 8px var(--pink),0 26px 50px -20px #000}
+  .hero__sello{position:absolute;inset:0;animation:gira 22s linear infinite}
+  .hero__sello text{font-family:"Space Mono",monospace;font-size:11.2px;letter-spacing:.13em;
+    fill:var(--tang);text-transform:uppercase}
+  @keyframes gira{to{transform:rotate(360deg)}}
+
+  .hero__nombre{font-size:clamp(72px,25vw,140px);margin:20px 0 0}
+  .hero__nombre em{font-style:normal;color:var(--pink)}
+  .hero__bio{max-width:30ch;margin:14px auto 0;color:var(--cream-dim);font-size:16px}
+  .hero__chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;list-style:none;padding:0;margin:18px 0 0}
+  .hero__chips li{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;border:1px solid rgba(255,243,233,.24);border-radius:100px;
+    padding:6px 12px;color:var(--cream-dim)}
+
+  .lista{display:flex;flex-direction:column;gap:14px}
+  .vacio{color:var(--cream-dim);font-size:15px}
+  .vacio code{font-family:"Space Mono",monospace;font-size:13px;background:var(--card);
+    padding:2px 6px;border-radius:5px}
+
+  .redes{display:flex;flex-direction:column;gap:10px}
+  .red{display:flex;align-items:center;gap:14px;padding:17px 18px;background:var(--card);
+    border-radius:14px;text-decoration:none;font-weight:600;transition:background .16s,transform .16s}
+  .red:hover{background:var(--card-2);transform:translateX(3px)}
+  .red__icono{font-size:19px;width:22px;text-align:center;color:var(--tang)}
+  .red__sub{display:block;font-weight:400;font-size:13px;color:var(--cream-dim)}
+  .red__ir{margin-left:auto;color:var(--cream-dim)}
+</style>
