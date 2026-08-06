@@ -1,0 +1,51 @@
+---
+import Admin from '../../layouts/Admin.astro';
+export const prerender = false;
+
+const db = Astro.locals.db!;
+const [cup, pos, opi] = await Promise.all([
+  db.from('cupones').select('id,activo', { count: 'exact' }),
+  db.from('posts').select('id,publicado', { count: 'exact' }),
+  db.from('opiniones').select('id', { count: 'exact' }),
+]);
+
+const cupActivos = (cup.data ?? []).filter((c: any) => c.activo).length;
+const posPublicados = (pos.data ?? []).filter((p: any) => p.publicado).length;
+const borradores = (pos.data ?? []).length - posPublicados;
+---
+<Admin titulo="Panel">
+  <div class="resumen">
+    <a class="caja" href="/admin/cupones/">
+      <span class="caja__n display">{cupActivos}</span>
+      <span class="caja__l">cupones activos</span>
+    </a>
+    <a class="caja" href="/admin/posts/">
+      <span class="caja__n display">{posPublicados}</span>
+      <span class="caja__l">entradas publicadas</span>
+    </a>
+    <a class="caja" href="/admin/posts/">
+      <span class="caja__n display">{borradores}</span>
+      <span class="caja__l">en borrador</span>
+    </a>
+    <a class="caja" href="/admin/opiniones/">
+      <span class="caja__n display">{opi.data?.length ?? 0}</span>
+      <span class="caja__l">opiniones</span>
+    </a>
+  </div>
+
+  <div class="acciones">
+    <a class="btn" href="/admin/posts/nueva/">Escribir entrada</a>
+    <a class="btn btn--fantasma" href="/admin/cupones/nuevo/">Añadir cupón</a>
+    <a class="btn btn--fantasma" href="/admin/opiniones/nueva/">Añadir opinión</a>
+  </div>
+
+  <style>
+    .resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+    .caja{background:var(--card);border-radius:14px;padding:20px;text-decoration:none;color:inherit;
+      display:flex;flex-direction:column;gap:4px;transition:background .16s}
+    .caja:hover{background:var(--card-2)}
+    .caja__n{font-size:40px;color:var(--tang)}
+    .caja__l{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+      text-transform:uppercase;color:var(--cream-dim)}
+  </style>
+</Admin>

@@ -1,25 +1,24 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import TicketCodigo from '../components/TicketCodigo.astro';
 import TarjetaPost from '../components/TarjetaPost.astro';
 import HuecoAnuncio from '../components/HuecoAnuncio.astro';
 import perfil from '../data/perfil.json';
-import codigos from '../data/codigos.json';
+import { getCupones, getPosts } from '../lib/contenido';
 import { Image } from 'astro:assets';
 import retrato from '../assets/bali-1.jpg';
 
-const activos = codigos.filter((c) => c.activo);
-const destacado = activos.find((c) => c.destacado) ?? activos[0];
+export const prerender = false;
 
-const posts = (await getCollection('posts', ({ data }) => !data.borrador))
-  .sort((a, b) => b.data.fecha.valueOf() - a.data.fecha.valueOf())
-  .slice(0, 4);
+const [cupones, posts] = await Promise.all([getCupones(), getPosts(4)]);
+const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
 ---
 <Base>
   <section class="hero">
     <div class="hero__aro">
-      <Image class="hero__foto" src={retrato} alt={`${perfil.nombre}, ${perfil.raza.toLowerCase()} color ${perfil.color.toLowerCase()}`} widths={[280, 560]} sizes="min(78vw, 300px)" />
+      <Image class="hero__foto" src={retrato}
+        alt={`${perfil.nombre}, ${perfil.raza.toLowerCase()} color ${perfil.color.toLowerCase()}`}
+        widths={[280, 560]} sizes="min(78vw, 300px)" />
       {destacado && (
         <svg class="hero__sello" viewBox="0 0 200 200" aria-hidden="true">
           <defs>
@@ -49,11 +48,13 @@ const posts = (await getCollection('posts', ({ data }) => !data.borrador))
         <p class="eyebrow">Lo que has venido a buscar</p>
         <h2 class="display">CÓDIGOS</h2>
       </div>
-      <span class="seccion__meta">{activos.length} activos</span>
+      <span class="seccion__meta">{cupones.length} activos</span>
     </div>
-    <div class="lista">
-      {activos.map((c) => <TicketCodigo {...c} />)}
-    </div>
+    {cupones.length === 0 ? (
+      <p class="vacio">Ahora mismo no hay ningún código activo.</p>
+    ) : (
+      <div class="lista">{cupones.map((c) => <TicketCodigo {...c} />)}</div>
+    )}
   </section>
 
   <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
@@ -67,13 +68,12 @@ const posts = (await getCollection('posts', ({ data }) => !data.borrador))
       <a class="seccion__meta" href="/blog/">Ver todo →</a>
     </div>
     {posts.length === 0 ? (
-      <p class="vacio">Todavía no hay entradas. La primera irá en <code>src/content/posts/</code>.</p>
+      <p class="vacio">Todavía no hay entradas.</p>
     ) : (
       <div class="lista">
         {posts.map((p) => (
-          <TarjetaPost url={`/blog/${p.id}/`} titulo={p.data.titulo} resumen={p.data.resumen}
-            fecha={p.data.fecha} portada={p.data.portada} portadaAlt={p.data.portadaAlt}
-            etiquetas={p.data.etiquetas} />
+          <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+            fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt} etiquetas={p.etiquetas} />
         ))}
       </div>
     )}
@@ -118,9 +118,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.borrador))
     padding:6px 12px;color:var(--cream-dim)}
 
   .lista{display:flex;flex-direction:column;gap:14px}
-  .vacio{color:var(--cream-dim);font-size:15px}
-  .vacio code{font-family:"Space Mono",monospace;font-size:13px;background:var(--card);
-    padding:2px 6px;border-radius:5px}
+  .vacio{color:var(--cream-dim)}
 
   .redes{display:flex;flex-direction:column;gap:10px}
   .red{display:flex;align-items:center;gap:14px;padding:17px 18px;background:var(--card);

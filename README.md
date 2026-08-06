@@ -2,41 +2,63 @@
 
 Web y miniblog de **Bali**, caniche toy chocolate ([@bali_the_poodletoy](https://www.instagram.com/bali_the_poodletoy)).
 
-Astro 7 · sitio estático · sin base de datos.
+Astro 7 · Supabase · Vercel. Todo en capa gratuita.
 
-📄 **Los requisitos completos están en [REQUISITOS.md](./REQUISITOS.md).**
+📄 **Requisitos completos en [REQUISITOS.md](./REQUISITOS.md).**
 
-## Empezar
+## Puesta en marcha
+
+**1. Supabase.** Crea un proyecto en [supabase.com](https://supabase.com) (gratis).
+
+**2. Base de datos.** SQL Editor → New query → pega `supabase/schema.sql` → Run.
+⚠️ Antes cambia los correos del `insert into admins` por los vuestros.
+
+**3. Google.** Authentication → Providers → Google → activar.
+En URL Configuration añade como redirect: `https://TU-DOMINIO/admin/callback`
+y `http://localhost:4321/admin/callback`.
+
+**4. Variables.**
 
 ```bash
+cp .env.example .env   # y rellena URL y clave anon
 npm install
-npm run dev      # http://localhost:4321
+npm run dev            # http://localhost:4321
 ```
 
-## Las dos cosas que vas a editar
+**5. Vercel.** Importa el repo. Mete las mismas variables en
+Settings → Environment Variables. Cada push despliega.
+
+## El día a día
+
+Todo desde `/admin` en el móvil. No hace falta tocar el código.
 
 | Quiero… | Voy a… |
 |---|---|
-| Cambiar un código de descuento | `src/data/codigos.json` |
-| Escribir una entrada | crear un `.md` en `src/content/posts/` |
+| Añadir un cupón | `/admin/cupones/nuevo/` |
+| Escribir una entrada | `/admin/posts/nueva/` |
+| Añadir una opinión | `/admin/opiniones/nueva/` |
+| Dar acceso a alguien | tabla `admins` en Supabase |
+
+Cambios que sí tocan el código:
+
+| Quiero… | Voy a… |
+|---|---|
 | Cambiar la bio o las redes | `src/data/perfil.json` |
-| Cambiar los colores | las variables de arriba de `src/styles/global.css` |
+| Cambiar los colores | variables de arriba de `src/styles/global.css` |
 | Poner el dominio | `site:` en `astro.config.mjs` |
 
 ## Antes de publicar
 
-- [ ] Dominio comprado y puesto en `astro.config.mjs` y en `public/robots.txt`
+- [ ] Correos reales en la tabla `admins`
+- [ ] Dominio en `astro.config.mjs` y en `public/robots.txt`
 - [ ] Datos del titular en `src/pages/aviso-legal.astro`
 - [ ] Correo real en `src/data/perfil.json`
-- [ ] URLs reales en `src/data/codigos.json`
-- [ ] Una imagen `public/og.jpg` de 1200×630 para cuando se comparta el enlace
+- [ ] Imagen `public/og.jpg` de 1200×630 para cuando se comparta el enlace
 
 ## Anuncios
 
-Están apagados mientras `PUBLIC_ADSENSE_ID` esté vacío: el componente
-`HuecoAnuncio` no pinta nada. Para activarlos, rellena las variables en Vercel
-y redespliega. Ver el apartado 3.3 de REQUISITOS.md.
+Apagados mientras `PUBLIC_ADSENSE_ID` esté vacía: `HuecoAnuncio` no pinta nada.
+Ver apartado 3.3 de REQUISITOS.md.
 
-## Desplegar
-
-Push a GitHub → importar en Vercel → detecta Astro solo. Cada push despliega.
+**Ojo:** AdSense no aprueba subdominios de plataforma. Con `algo.vercel.app` los
+ingresos por publicidad son cero. Hace falta dominio propio (~11 €/año).

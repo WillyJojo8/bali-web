@@ -1,0 +1,31 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+export const prerender = false;
+
+const db = Astro.locals.db!;
+const { data: cupones } = await db.from('cupones').select('*')
+  .order('destacado', { ascending: false }).order('orden');
+---
+<Admin titulo="Cupones">
+  <a class="btn" href="/admin/cupones/nuevo/">Añadir cupón</a>
+
+  {!cupones?.length ? (
+    <p class="vacio">Todavía no hay cupones.</p>
+  ) : (
+    <div class="tabla">
+      {cupones.map((c) => (
+        <div class="item">
+          <div class="item__txt">
+            <div class="item__t">{c.codigo} · −{c.valor}{c.unidad}</div>
+            <div class="item__s">{c.marca}{c.que ? ` · ${c.que}` : ''}</div>
+          </div>
+          {c.destacado && <span class="etiqueta">Destacado</span>}
+          <span class:list={['etiqueta', c.activo ? 'etiqueta--on' : 'etiqueta--off']}>
+            {c.activo ? 'Activo' : 'Retirado'}
+          </span>
+          <a href={`/admin/cupones/${c.id}/`}>Editar</a>
+        </div>
+      ))}
+    </div>
+  )}
+</Admin>

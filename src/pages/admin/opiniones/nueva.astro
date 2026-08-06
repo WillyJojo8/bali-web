@@ -1,0 +1,8 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormOpinion from '../../../components/FormOpinion.astro';
+export const prerender = false;
+---
+<Admin titulo="Nueva opinión">
+  <FormOpinion accion="/api/opiniones" />
+</Admin>

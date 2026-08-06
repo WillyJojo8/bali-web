@@ -1,0 +1,29 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+export const prerender = false;
+
+const db = Astro.locals.db!;
+const { data: opiniones } = await db.from('opiniones').select('*').order('creado_en', { ascending: false });
+---
+<Admin titulo="Opiniones">
+  <a class="btn" href="/admin/opiniones/nueva/">Añadir opinión</a>
+
+  {!opiniones?.length ? (
+    <p class="vacio">Todavía no hay opiniones.</p>
+  ) : (
+    <div class="tabla">
+      {opiniones.map((o) => (
+        <div class="item">
+          <div class="item__txt">
+            <div class="item__t">{o.producto} · {'★'.repeat(o.nota)}{'☆'.repeat(5 - o.nota)}</div>
+            <div class="item__s">{o.marca ?? '—'}</div>
+          </div>
+          <span class:list={['etiqueta', o.publicada ? 'etiqueta--on' : 'etiqueta--off']}>
+            {o.publicada ? 'Publicada' : 'Oculta'}
+          </span>
+          <a href={`/admin/opiniones/${o.id}/`}>Editar</a>
+        </div>
+      ))}
+    </div>
+  )}
+</Admin>

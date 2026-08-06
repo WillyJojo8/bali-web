@@ -1,0 +1,71 @@
+---
+interface Props { valor?: string | null; nombre?: string; etiqueta?: string }
+const { valor, nombre = 'portada_url', etiqueta = 'Foto destacada' } = Astro.props;
+---
+<div class="subir" data-nombre={nombre}>
+  <label>{etiqueta}</label>
+  <input type="hidden" name={nombre} value={valor ?? ''} />
+
+  <div class="subir__caja">
+    <img class="subir__vista" src={valor ?? ''} alt="" hidden={!valor} />
+    <label class="subir__btn">
+      <input type="file" accept="image/*" hidden />
+      {valor ? 'Cambiar foto' : 'Elegir foto'}
+    </label>
+    <button type="button" class="subir__quitar" hidden={!valor}>Quitar</button>
+  </div>
+  <small class="subir__estado">Máximo 8 MB. JPG, PNG o WebP.</small>
+</div>
+
+<script is:inline>
+  document.querySelectorAll('.subir').forEach((caja) => {
+    const oculto = caja.querySelector('input[type=hidden]');
+    const archivo = caja.querySelector('input[type=file]');
+    const vista = caja.querySelector('.subir__vista');
+    const estado = caja.querySelector('.subir__estado');
+    const quitar = caja.querySelector('.subir__quitar');
+    const btn = caja.querySelector('.subir__btn');
+
+    archivo.addEventListener('change', async () => {
+      const f = archivo.files?.[0];
+      if (!f) return;
+
+      estado.textContent = 'Subiendo…';
+      const datos = new FormData();
+      datos.append('archivo', f);
+
+      const r = await fetch('/api/subir-foto', { method: 'POST', body: datos });
+      if (!r.ok) { estado.textContent = 'No se pudo subir: ' + (await r.text()); return; }
+
+      const { url } = await r.json();
+      oculto.value = url;
+      vista.src = url;
+      vista.hidden = false;
+      quitar.hidden = false;
+      btn.lastChild.textContent = ' Cambiar foto';
+      estado.textContent = 'Subida.';
+    });
+
+    quitar.addEventListener('click', () => {
+      oculto.value = '';
+      vista.hidden = true;
+      quitar.hidden = true;
+      archivo.value = '';
+      estado.textContent = 'Máximo 8 MB. JPG, PNG o WebP.';
+    });
+  });
+</script>
+
+<style>
+  .subir{margin-bottom:18px}
+  .subir > label{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--cream-dim);display:block;margin-bottom:8px}
+  .subir__caja{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .subir__vista{width:88px;height:88px;object-fit:cover;border-radius:12px;background:var(--card)}
+  .subir__btn{background:var(--card);border:1px solid var(--linea);border-radius:10px;
+    padding:12px 16px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer;color:var(--cream)}
+  .subir__quitar{background:none;border:0;color:var(--cream-dim);font-size:13px;cursor:pointer;
+    text-decoration:underline}
+  .subir__estado{display:block;font-size:12px;color:rgba(255,243,233,.4);margin-top:8px}
+</style>

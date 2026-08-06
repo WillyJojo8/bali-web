@@ -1,45 +1,43 @@
 ---
-import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
+import { getPost } from '../../lib/contenido';
+import { aHtml } from '../../lib/markdown';
 
-export async function getStaticPaths() {
-  const posts = await getCollection('posts', ({ data }) => !data.borrador);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
-}
+export const prerender = false;
 
-const { post } = Astro.props;
-const { Content } = await render(post);
-const { titulo, resumen, fecha, portada, portadaAlt, etiquetas, patrocinado } = post.data;
-const legible = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+const { slug } = Astro.params;
+const post = await getPost(slug!);
+if (!post) return new Response(null, { status: 404, statusText: 'No encontrada' });
+
+const legible = new Date(post.fecha).toLocaleDateString('es-ES', {
+  day: 'numeric', month: 'long', year: 'numeric',
+});
+const cuerpo = aHtml(post.cuerpo);
 ---
-<Base titulo={titulo} descripcion={resumen}>
+<Base titulo={post.titulo} descripcion={post.resumen} imagen={post.portada_url ?? undefined}>
   <article class="post">
     <header class="post__head">
-      <time class="post__fecha" datetime={fecha.toISOString()}>{legible}</time>
-      <h1 class="post__titulo display">{titulo}</h1>
-      <p class="post__resumen">{resumen}</p>
-      {etiquetas.length > 0 && (
-        <ul class="post__tags">{etiquetas.map((t) => <li>{t}</li>)}</ul>
+      <time class="post__fecha" datetime={post.fecha}>{legible}</time>
+      <h1 class="post__titulo display">{post.titulo}</h1>
+      <p class="post__resumen">{post.resumen}</p>
+      {post.etiquetas.length > 0 && (
+        <ul class="post__tags">{post.etiquetas.map((t) => <li>{t}</li>)}</ul>
       )}
     </header>
 
-    {portada && (
-      <Image class="post__portada" src={portada} alt={portadaAlt ?? ''} widths={[400, 800, 1200]}
-        sizes="(max-width:700px) 100vw, 660px" />
+    {post.portada_url && (
+      <img class="post__portada" src={post.portada_url} alt={post.portada_alt ?? ''} loading="eager" />
     )}
 
-    {patrocinado && (
+    {post.patrocinado && (
       <p class="aviso">
         Esta entrada incluye enlaces de afiliado o productos cedidos por la marca.
         Si compras desde aquí, Bali se lleva una comisión sin coste extra para ti.
       </p>
     )}
 
-    <div class="post__cuerpo">
-      <Content />
-    </div>
+    <div class="post__cuerpo" set:html={cuerpo} />
 
     <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_ARTICULO} />
 
@@ -67,11 +65,9 @@ const legible = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long
   .post__cuerpo :global(a){color:var(--tang);text-underline-offset:3px}
   .post__cuerpo :global(ul),.post__cuerpo :global(ol){padding-left:20px;margin:0 0 18px}
   .post__cuerpo :global(li){margin-bottom:6px}
-  .post__cuerpo :global(img){border-radius:var(--radio);margin:24px 0}
+  .post__cuerpo :global(img){border-radius:var(--radio);margin:24px 0;max-width:100%}
   .post__cuerpo :global(blockquote){border-left:3px solid var(--pink);margin:24px 0;
     padding:2px 0 2px 16px;color:var(--cream-dim);font-style:italic}
-  .post__cuerpo :global(code){font-family:"Space Mono",monospace;font-size:14px;
-    background:var(--card);padding:2px 6px;border-radius:5px}
 
   .post__volver{display:inline-block;margin-top:20px;font-family:"Space Mono",monospace;
     font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim);text-decoration:none}

@@ -1,0 +1,59 @@
+---
+import '../../styles/global.css';
+const error = Astro.url.searchParams.get('error');
+const urlSupabase = import.meta.env.PUBLIC_SUPABASE_URL;
+const anon = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Entrar · Bali</title>
+  <meta name="robots" content="noindex" />
+  <link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,400..900&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="entrar">
+    <h1 class="display">BA<em>LI</em></h1>
+    <p class="entrar__sub">Panel de administración</p>
+
+    {error === 'sin-permiso' && (
+      <p class="entrar__error">
+        Esa cuenta de Google no tiene permiso. Pide que añadan tu correo a la tabla <code>admins</code>.
+      </p>
+    )}
+
+    <button id="google" class="entrar__btn" type="button">Entrar con Google</button>
+    <a class="entrar__volver" href="/">← Volver a la web</a>
+  </main>
+
+  <script define:vars={{ urlSupabase, anon }}>
+    import('https://esm.sh/@supabase/supabase-js@2').then(({ createClient }) => {
+      const db = createClient(urlSupabase, anon);
+      document.getElementById('google').addEventListener('click', () => {
+        db.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: `${location.origin}/admin/callback` },
+        });
+      });
+    });
+  </script>
+
+  <style>
+    .entrar{min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:14px;text-align:center;padding:24px}
+    .entrar h1{font-size:64px;margin:0}
+    .entrar h1 em{font-style:normal;color:var(--pink)}
+    .entrar__sub{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.2em;
+      text-transform:uppercase;color:var(--cream-dim);margin:0 0 18px}
+    .entrar__error{background:var(--card);border-left:3px solid var(--pink);border-radius:0 10px 10px 0;
+      padding:12px 16px;font-size:14px;color:var(--cream-dim);max-width:38ch;text-align:left}
+    .entrar__error code{font-family:"Space Mono",monospace;font-size:13px}
+    .entrar__btn{background:var(--cream);color:var(--bg);border:0;border-radius:12px;
+      padding:15px 26px;font-family:"Space Mono",monospace;font-weight:700;font-size:13px;
+      letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+    .entrar__volver{font-size:13px;color:var(--cream-dim);text-decoration:none;margin-top:8px}
+  </style>
+</body>
+</html>

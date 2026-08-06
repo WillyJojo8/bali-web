@@ -1,13 +1,13 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import TarjetaPost from '../../components/TarjetaPost.astro';
 import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
+import { getPosts } from '../../lib/contenido';
 
-const posts = (await getCollection('posts', ({ data }) => !data.borrador))
-  .sort((a, b) => b.data.fecha.valueOf() - a.data.fecha.valueOf());
+export const prerender = false;
+const posts = await getPosts();
 ---
-<Base titulo="Blog" descripcion="Reseñas, trucos y el día a día de Bali.">
+<Base titulo="Blog" descripcion="Reseñas, consejos y el día a día de Bali.">
   <section class="seccion">
     <div class="seccion__head">
       <div>
@@ -23,9 +23,9 @@ const posts = (await getCollection('posts', ({ data }) => !data.borrador))
       <div class="lista">
         {posts.map((p, i) => (
           <>
-            <TarjetaPost url={`/blog/${p.id}/`} titulo={p.data.titulo} resumen={p.data.resumen}
-              fecha={p.data.fecha} portada={p.data.portada} portadaAlt={p.data.portadaAlt}
-              etiquetas={p.data.etiquetas} />
+            <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+              fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt}
+              etiquetas={p.etiquetas} />
             {i === 4 && <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />}
           </>
         ))}

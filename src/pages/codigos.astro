@@ -2,9 +2,10 @@
 import Base from '../layouts/Base.astro';
 import TicketCodigo from '../components/TicketCodigo.astro';
 import HuecoAnuncio from '../components/HuecoAnuncio.astro';
-import codigos from '../data/codigos.json';
+import { getCupones } from '../lib/contenido';
 
-const activos = codigos.filter((c) => c.activo);
+export const prerender = false;
+const cupones = await getCupones();
 ---
 <Base titulo="Códigos de descuento" descripcion="Todos los códigos de descuento activos de Bali.">
   <section class="seccion">
@@ -13,7 +14,7 @@ const activos = codigos.filter((c) => c.activo);
         <p class="eyebrow">Toca y se copia solo</p>
         <h2 class="display">CÓDIGOS</h2>
       </div>
-      <span class="seccion__meta">{activos.length} activos</span>
+      <span class="seccion__meta">{cupones.length} activos</span>
     </div>
 
     <p class="aviso">
@@ -21,9 +22,13 @@ const activos = codigos.filter((c) => c.activo);
       una comisión sin que a ti te cueste más.
     </p>
 
-    <div class="lista">
-      {activos.map((c) => <TicketCodigo {...c} />)}
-    </div>
+    {cupones.length === 0 ? (
+      <p class="vacio">Ahora mismo no hay ningún código activo.</p>
+    ) : (
+      <div class="lista">
+        {cupones.map((c) => <TicketCodigo {...c} />)}
+      </div>
+    )}
   </section>
 
   <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
@@ -31,4 +36,5 @@ const activos = codigos.filter((c) => c.activo);
 
 <style>
   .lista{display:flex;flex-direction:column;gap:14px}
+  .vacio{color:var(--cream-dim)}
 </style>

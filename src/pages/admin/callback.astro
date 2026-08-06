@@ -1,0 +1,42 @@
+---
+/*
+  Google devuelve los tokens en el fragmento (#) de la URL, que el
+  servidor no ve. Por eso este paso ocurre en el navegador: se leen
+  y se envían a /api/sesion, que los guarda en cookies httpOnly.
+*/
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Entrando…</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    body{background:#1B0F0A;color:#C6A895;font-family:system-ui,sans-serif;
+      display:grid;place-items:center;min-height:100dvh;margin:0}
+  </style>
+</head>
+<body>
+  <p id="estado">Entrando…</p>
+  <script is:inline>
+    (async () => {
+      const p = new URLSearchParams(location.hash.slice(1));
+      const access_token = p.get('access_token');
+      const refresh_token = p.get('refresh_token');
+
+      if (!access_token || !refresh_token) {
+        location.replace('/admin/login?error=sin-token');
+        return;
+      }
+
+      const r = await fetch('/api/sesion', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ access_token, refresh_token }),
+      });
+
+      location.replace(r.ok ? '/admin/' : '/admin/login?error=sin-permiso');
+    })();
+  </script>
+</body>
+</html>

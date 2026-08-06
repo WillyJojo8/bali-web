@@ -1,0 +1,13 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormOpinion from '../../../components/FormOpinion.astro';
+export const prerender = false;
+
+const { id } = Astro.params;
+const db = Astro.locals.db!;
+const { data: opinion } = await db.from('opiniones').select('*').eq('id', id).maybeSingle();
+if (!opinion) return Astro.redirect('/admin/opiniones/');
+---
+<Admin titulo="Editar opinión">
+  <FormOpinion accion={`/api/opiniones/${opinion.id}`} opinion={opinion} />
+</Admin>

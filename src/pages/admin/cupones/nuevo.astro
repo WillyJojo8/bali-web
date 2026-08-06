@@ -1,0 +1,8 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormCupon from '../../../components/FormCupon.astro';
+export const prerender = false;
+---
+<Admin titulo="Nuevo cupón">
+  <FormCupon accion="/api/cupones" />
+</Admin>

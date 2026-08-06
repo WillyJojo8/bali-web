@@ -1,0 +1,8 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormPost from '../../../components/FormPost.astro';
+export const prerender = false;
+---
+<Admin titulo="Nueva entrada">
+  <FormPost accion="/api/posts" />
+</Admin>

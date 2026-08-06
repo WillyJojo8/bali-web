@@ -1,6 +1,6 @@
 # Bali · web y miniblog
 
-Documento de requisitos. Versión 0.1 — agosto 2026.
+Documento de requisitos. Versión 0.2 — agosto 2026.
 
 ---
 
@@ -28,8 +28,9 @@ El tercero es el que paga las facturas, aunque sea el que menos visitas trae.
 
 ### Qué NO es
 
-No es una tienda. No hay carrito, ni pagos, ni cuentas de usuario, ni comentarios.
-Si en algún momento hace falta vender algo, se enlaza a una tienda externa.
+No es una tienda. No hay carrito ni pagos: si hace falta vender algo, se enlaza
+a una tienda externa. Tampoco hay cuentas para el público ni comentarios — el
+único inicio de sesión es el de los dos administradores.
 
 ---
 
@@ -37,83 +38,86 @@ Si en algún momento hace falta vender algo, se enlaza a una tienda externa.
 
 ### Versión 1 — lo que hay que tener
 
+**Parte pública**
+
 - **Portada** con la foto, el nombre, la bio y los códigos justo debajo.
-- **Página de códigos** con todos los activos. Cada uno se copia al portapapeles
-  con un toque.
-- **Blog** con listado y páginas de entrada. Contenido en Markdown.
+- **Página de códigos** con todos los activos. Cada uno se copia con un toque.
+- **Blog** con listado y páginas de entrada.
 - **Enlaces a redes** y correo de colaboraciones.
 - **RSS** y **sitemap**.
 - **Aviso legal y política de privacidad** — obligatorio en España, y AdSense no
   aprueba sin ellos.
 - **Aviso de contenido patrocinado** automático en las entradas marcadas.
-- Funciona bien en móvil, que es de donde va a venir el 90% del tráfico.
+
+**Panel de administración** (en `/admin`, dos personas)
+
+- **Inicio de sesión con Google.** Solo entran los correos de una lista blanca.
+- **Cupones**: crear, editar, retirar, eliminar, marcar destacado, fecha de caducidad.
+- **Entradas**: crear, editar, eliminar, guardar como borrador, publicar.
+- **Fotos**: subir desde el móvil, con vista previa.
+- **Opiniones**: producto, nota de 1 a 5, texto y foto.
 
 ### Versión 2 — cuando la 1 esté rodando
 
 - Página de una sola marca o producto (para colaboraciones concretas).
-- Filtro del blog por etiqueta.
-- Buscador (Pagefind: se genera en el build, sin servidor).
-- Newsletter, si alguna vez tiene sentido.
+- Filtro del blog por tipo de contenido.
+- Buscador.
+- Programar una entrada para que se publique sola en una fecha.
+- Vista previa del Markdown mientras se escribe.
 
 ### Fuera de alcance, decidido a propósito
 
-- Comentarios. Traen spam y hay que moderarlos.
+- Comentarios del público. Traen spam y hay que moderarlos.
 - Multiidioma. Se puede añadir después si el tráfico lo pide.
-- Panel de administración con login.
+- Registro abierto: nadie de fuera crea cuenta. La lista de admins se toca a mano
+  en la base de datos, y son dos personas.
+- Editor visual tipo Word. El campo de texto es Markdown.
 
 ---
 
 ## 3. Funciones, una por una
 
-### 3.1 Códigos de descuento
+### 3.1 Cupones de descuento
 
-Es la función principal. Los códigos viven en `src/data/codigos.json`:
+Es la función principal. Viven en la tabla `cupones` y se gestionan desde
+`/admin/cupones/`.
 
-```json
-{
-  "id": "mypug15",
-  "marca": "My Pug & Co.",
-  "valor": "15",
-  "unidad": "% dto",
-  "codigo": "BALI15",
-  "que": "Arneses y correas, en toda la web",
-  "url": "https://...",
-  "destacado": true,
-  "activo": true
-}
-```
+Campos: marca, valor, unidad (`% dto` o `€ menos`), código, sobre qué aplica,
+enlace, destacado, activo, fecha de caducidad.
 
 Comportamiento:
 
-- Solo se muestran los que tienen `activo: true`. Para retirar un código se pone
-  a `false`, no se borra: así queda el histórico.
-- El que tiene `destacado: true` aparece además girando alrededor de la foto de
-  la portada y en la cinta de arriba.
-- Al tocar **Copiar**, el código va al portapapeles y el botón cambia a
-  "¡Copiado!" durante dos segundos.
-- El enlace a la tienda lleva `rel="sponsored"`, que es lo que Google pide para
+- Solo se muestran los `activo = true` y no caducados. **Esto lo impone la base
+  de datos**, no el código de la web: la política de lectura pública filtra por
+  esas dos condiciones. Aunque alguien se saltara la interfaz, no vería un cupón
+  retirado.
+- Para retirar un cupón se desmarca "Activo", no se borra: así queda el histórico.
+- El marcado como destacado sale además girando alrededor de la foto de la portada
+  y en la cinta superior.
+- Al tocar **Copiar**, el código va al portapapeles y el botón confirma dos segundos.
+- El enlace a la tienda lleva `rel="sponsored"`, que es lo que pide Google para
   enlaces pagados.
 
 ### 3.2 Blog
 
-Cada entrada es un archivo `.md` en `src/content/posts/`. La cabecera:
+Las entradas viven en la tabla `posts` y se escriben desde `/admin/posts/nueva/`.
 
-```yaml
----
-titulo: "Probamos el arnés de pata de gallo"
-resumen: "Dos meses de uso diario. Qué aguanta y qué no."
-fecha: 2026-08-20
-portada: ./fotos/arnes.jpg      # opcional
-portadaAlt: "Bali con el arnés"  # obligatorio si hay portada
-etiquetas: ["reseña", "arneses"]
-patrocinado: true                # pone el aviso legal automáticamente
-borrador: false                  # true = no se publica
----
-```
+Campos: título, dirección web, resumen, texto (Markdown), foto de portada,
+descripción de la foto, etiquetas, tipo, patrocinada, publicada, fecha.
 
-El esquema está validado: si te dejas un campo o pones mal una fecha, el build
-falla y te dice dónde. Es a propósito — mejor que se rompa en tu máquina que
-publicar una entrada rota.
+Detalles que importan:
+
+- **La dirección web se genera sola** desde el título, quitando acentos y
+  pasando a guiones. Si la editas a mano, deja de autocompletarse — para que no
+  te la cambie sin avisar cuando corriges una errata del título.
+- **Borrador y publicada son estados separados.** Puedes dejar algo a medias sin
+  que salga en la web. Un borrador no es visible para nadie de fuera, y tampoco
+  a través de su dirección directa.
+- **"Patrocinada"** añade el aviso legal de colaboración al principio del
+  artículo. Es una casilla porque olvidarse de escribirlo es fácil, y es
+  obligatorio.
+- El **tipo** clasifica la entrada en reseña, día a día, consejos o colaboración.
+  Sirve para filtrar más adelante sin tener que reetiquetar nada.
 
 ### 3.3 Publicidad
 
@@ -163,35 +167,94 @@ Objetivos, no aspiraciones:
 - Foco de teclado visible, textos alternativos en las fotos, `prefers-reduced-motion`
   respetado (la cinta y el sello dejan de girar).
 
+### 3.6 Panel de administración
+
+En `/admin`. No aparece en el menú público ni lo indexa Google (`noindex`).
+
+**Quién entra.** Inicio de sesión con Google, y después una segunda comprobación:
+el correo tiene que estar en la tabla `admins`. Las dos hacen falta. Sin la
+segunda, cualquiera con una cuenta de Gmail entraría.
+
+La lista de admins se edita a mano en Supabase. Son dos personas y no va a
+cambiar: no merece la pena una pantalla para gestionarla.
+
+**Tres capas de seguridad, no una:**
+
+1. El *middleware* corta la petición antes de renderizar nada si no eres admin.
+2. Las rutas de la API vuelven a comprobar la sesión en cada petición.
+3. Las políticas RLS de PostgreSQL rechazan la escritura aunque alguien llame
+   directamente a la base de datos con la clave pública.
+
+La tercera es la que de verdad protege. Las dos primeras existen para que el
+error se vea antes y mejor.
+
+**Sesión.** Los tokens se guardan en cookies `httpOnly`: JavaScript no puede
+leerlas, lo que evita el robo de sesión por XSS. Duran 30 días.
+
+**Fotos.** Se suben a Supabase Storage y quedan públicas por URL. Límite de 8 MB
+y solo JPG, PNG, WebP o AVIF. El nombre se genera con marca de tiempo más
+identificador aleatorio, para que dos fotos con el mismo nombre del móvil no se
+pisen — que es justo lo que pasó con los `FullSizeRender.jpeg` de iOS.
+
+**Escribir desde el móvil** es el caso normal, no la excepción: los campos usan
+tamaño de fuente 16px para que iOS no haga zoom al enfocarlos, y los formularios
+son de una sola columna en pantallas estrechas.
+
 ---
 
 ## 4. Stack
 
-**Astro 7 + Markdown + despliegue estático.** Sin base de datos, sin backend,
-sin CMS.
+**Astro 7 + Supabase, desplegado en Vercel.** Todo en capa gratuita.
 
 | Pieza | Elección | Por qué |
 |---|---|---|
-| Framework | Astro | Genera HTML plano. Cero JavaScript por defecto |
-| Contenido | Markdown con esquema validado | Sin base de datos que mantener |
-| Estilos | CSS propio con variables | Sin build extra, sin clases de utilidad |
-| Hosting | Vercel o Cloudflare Pages | Gratis, despliegue al hacer push |
-| Imágenes | `astro:assets` | WebP y tamaños múltiples automáticos |
+| Framework | Astro 7 (modo servidor) | HTML plano, casi cero JavaScript |
+| Base de datos | Supabase (PostgreSQL) | Postgres de verdad, no un invento |
+| Autenticación | Supabase Auth con Google | Login con Google en tres clics de configuración |
+| Fotos | Supabase Storage | 1 GB gratis, URLs públicas |
+| Estilos | CSS propio con variables | Sin build extra |
+| Hosting | Vercel | Gratis, despliega en cada push |
+| Markdown | marked | Convierte el texto del panel a HTML |
 | Anuncios | AdSense, en huecos fijos | Ver 3.3 |
 
-### Por qué Astro y no otra cosa
+### Por qué este cambio
 
-- **No Next.js**: está pensado para aplicaciones. Aquí sobra el 90%.
-- **No WordPress**: hay que mantenerlo, actualizarlo y pagar hosting.
-- **No un HTML a mano**: a la décima entrada estarías copiando y pegando la
-  cabecera.
+La versión anterior era estática con el contenido en el repositorio. Eso deja de
+valer en cuanto quieres formularios: para que la otra persona publique tendría
+que usar GitHub, y subir una foto sería un commit. Con panel, base de datos y
+subida de archivos, hace falta un servidor.
 
-Astro está en el punto medio: escribes Markdown, sale HTML estático.
+### Por qué Supabase y no otra cosa
+
+- **No Firebase**: Firestore no es SQL y te obliga a pensar en documentos. Ya
+  sabes PostgreSQL — aprovéchalo.
+- **No una base de datos propia**: habría que pagar hosting y mantenerla.
+- **No un CMS externo** (Sanity, Contentful): el contenido acabaría fuera de tu
+  control y la capa gratuita es más caprichosa.
+- **No montar la autenticación a mano**: es exactamente el sitio donde no
+  conviene improvisar.
+
+Supabase te da Postgres, autenticación y almacenamiento en un solo proyecto
+gratuito. Y las políticas RLS son lo que hace que la seguridad viva en la base
+de datos y no en el código de la web.
 
 ### Lo que hay que saber para tocarlo
 
-Un `.astro` es HTML con un bloque de JavaScript arriba entre `---`. Eso es todo.
-Nada de hooks ni de ciclo de vida. Con lo que ya sabes vas sobrado.
+Un `.astro` es HTML con un bloque de JavaScript arriba entre `---`. Nada de
+hooks ni ciclo de vida. Las consultas son `db.from('posts').select()`, y las
+tablas las diseñas en SQL normal.
+
+### Límites de la capa gratuita
+
+| Servicio | Gratis | Cuándo te quedarías corto |
+|---|---|---|
+| Supabase | 500 MB de base de datos, 1 GB de fotos | Unas 800 fotos a 1 MB. Lejísimos |
+| Vercel | 100 GB de tráfico al mes | Decenas de miles de visitas |
+| AdSense | — | Requiere dominio propio (ver aviso) |
+
+Un detalle: **Supabase pausa los proyectos gratuitos tras un tiempo sin
+actividad.** Con visitas normales no pasa; si la web se queda parada meses, hay
+que reactivarlo desde su panel.
 
 ---
 
@@ -202,36 +265,42 @@ bali-web/
 ├── astro.config.mjs          ← el dominio se pone aquí
 ├── .env.example              ← copiar a .env
 ├── REQUISITOS.md             ← este documento
+├── supabase/
+│   └── schema.sql            ← EJECUTAR ESTO EN SUPABASE, PASO 1
 ├── public/
-│   ├── favicon.svg
-│   └── robots.txt
 └── src/
-    ├── data/
-    │   ├── codigos.json      ← LOS CÓDIGOS SE EDITAN AQUÍ
-    │   └── perfil.json       ← nombre, bio, redes, correo
-    ├── content/
-    │   └── posts/            ← una entrada = un .md
-    ├── content.config.ts     ← esquema de las entradas
+    ├── middleware.ts         ← protege /admin
+    ├── lib/
+    │   ├── supabase.ts       ← clientes y sesión
+    │   ├── contenido.ts      ← lectura del sitio público
+    │   └── markdown.ts
+    ├── data/perfil.json      ← nombre, bio, redes, correo
     ├── components/
-    │   ├── Cabecera.astro
-    │   ├── PieDePagina.astro
-    │   ├── TicketCodigo.astro
-    │   ├── TarjetaPost.astro
-    │   └── HuecoAnuncio.astro
-    ├── layouts/Base.astro    ← <head>, SEO, Open Graph
+    │   ├── Cabecera · PieDePagina · TicketCodigo · TarjetaPost
+    │   ├── HuecoAnuncio.astro
+    │   ├── FormCupon · FormPost · FormOpinion
+    │   └── SubirFoto.astro
+    ├── layouts/
+    │   ├── Base.astro        ← sitio público
+    │   └── Admin.astro       ← panel
     ├── pages/
-    │   ├── index.astro
-    │   ├── codigos.astro
-    │   ├── blog/index.astro
-    │   ├── blog/[...slug].astro
-    │   ├── aviso-legal.astro
-    │   ├── privacidad.astro
-    │   └── rss.xml.js
-    └── styles/global.css     ← los colores están todos aquí arriba
+    │   ├── index · codigos · aviso-legal · privacidad · rss.xml.js
+    │   ├── blog/index.astro · blog/[slug].astro
+    │   ├── admin/
+    │   │   ├── login · callback · index
+    │   │   ├── cupones/    (index · nuevo · [id])
+    │   │   ├── posts/      (index · nueva · [id])
+    │   │   └── opiniones/  (index · nueva · [id])
+    │   └── api/
+    │       ├── sesion.ts · subir-foto.ts
+    │       ├── cupones/    (index · [id])
+    │       ├── posts/      (index · [id])
+    │       └── opiniones/  (index · [id])
+    └── styles/global.css     ← los colores están arriba del todo
 ```
 
-Las dos rutas que vas a tocar el 95% de las veces: `src/data/codigos.json` y
-`src/content/posts/`.
+Una vez montado, **el día a día no toca el repositorio**: se hace todo desde
+`/admin` en el móvil. El código solo se abre para cambiar el diseño.
 
 ---
 
@@ -239,32 +308,23 @@ Las dos rutas que vas a tocar el 95% de las veces: `src/data/codigos.json` y
 
 ### Orden recomendado
 
-1. **Comprar el dominio.** Unos 11 €/año en Porkbun o Cloudflare. No es opcional
-   si quieres anuncios: ver el aviso de abajo.
-2. **Subir el repo a GitHub** e importarlo en Vercel. Detecta Astro solo.
-3. **Apuntar el dominio** a Vercel y actualizar `site:` en `astro.config.mjs`.
-4. **Publicar entradas.** Entre 10 y 15 antes de solicitar AdSense.
-5. **Configurar el banner de consentimiento** desde AdSense.
-6. **Solicitar AdSense.** Tarda de unos días a cuatro semanas.
-7. Rellenar el ID en las variables de entorno de Vercel y redesplegar.
+1. **Crear el proyecto en Supabase** (gratis, sin tarjeta). Apunta la URL y la
+   clave *anon*.
+2. **Ejecutar `supabase/schema.sql`** en SQL Editor → New query → Run. Antes,
+   cambia los dos correos del `insert into admins` por los vuestros.
+3. **Activar Google** en Authentication → Providers → Google. Pide un Client ID
+   de Google Cloud; el propio Supabase enlaza al sitio donde sacarlo.
+4. **Comprar el dominio.** Unos 11 €/año. No es opcional si quieres anuncios.
+5. **Subir el repo a GitHub** e importarlo en Vercel. Detecta Astro solo.
+6. **Poner las variables de entorno** en Vercel (las de `.env.example`) y
+   actualizar `site:` en `astro.config.mjs`.
+7. **Entrar en `/admin`** con Google y comprobar que te deja pasar.
+8. **Publicar contenido.** Entre 10 y 15 entradas antes de pedir AdSense.
+9. **Configurar el banner de consentimiento** desde AdSense.
+10. **Solicitar AdSense.** De unos días a cuatro semanas.
+11. Rellenar el ID de AdSense en Vercel y redesplegar.
 
-### Aviso importante sobre los anuncios
-
-<cite index="13-1">AdSense no aprueba sitios alojados en subdominios de plataforma. Vercel, Netlify, GitHub Pages sin dominio propio, Render — todos chocan con el mismo muro, y el rechazo que recibes habla de calidad del contenido, no de la causa real. En todos los casos documentados la solución fue la misma: añadir un dominio propio.</cite> Y no es solo AdSense:
-<cite index="13-1">Mediavine, Ezoic, Media.net y Raptive también exigen dominio propio o fallan sus comprobaciones automáticas contra URLs de subdominio.</cite>
-
-Traducido: **`bali.vercel.app` gratis sirve para tener la web en pie, pero con
-esa URL los ingresos por publicidad son cero.** Los 11 € del dominio no son un
-gasto opcional, son el peaje de entrada.
-
-Lo que sí funciona desde el día uno sin dominio propio son los **códigos de
-afiliado**. Y para una cuenta de mascota con seguidores fieles, casi seguro que
-dan más dinero que AdSense: una comisión del 10% sobre un arnés de 40 € son 4 €,
-lo mismo que te pagarían mil visitas de anuncios.
-
-**Sugerencia de prioridad:** compra el dominio, monta la web, céntrate en las
-colaboraciones, y deja AdSense como algo secundario que activas cuando tengas
-contenido suficiente.
+Del 1 al 3 son unos veinte minutos. El resto se hace en un rato.
 
 ### Comandos
 
@@ -277,42 +337,49 @@ npm run preview  # ver el resultado del build
 
 ---
 
-## 7. Cómo se publica una entrada desde el móvil
+## 7. El día a día
 
-1. Abrir github.com en el navegador (la app no deja crear archivos con soltura).
-2. `src/content/posts/` → **Add file** → **Create new file**.
-3. Nombrarlo `titulo-de-la-entrada.md`.
-4. Pegar la cabecera del apartado 3.2 y escribir debajo.
-5. **Commit**.
-6. Vercel despliega solo en un minuto.
+Ritmo previsto:
 
-Las fotos se suben a `src/content/posts/fotos/` con **Add file → Upload files**,
-desde la galería del móvil.
+| Qué | Cada cuánto | Dónde |
+|---|---|---|
+| Cupones | cuando surja | `/admin/cupones/` |
+| Reseñas | 1 o 2 al mes | `/admin/posts/` |
+| Fotos y mensajes cortos | ~1 a la semana | `/admin/posts/` |
 
-Si con el tiempo la persona que escribe no quiere ver GitHub, se puede añadir
-Decap CMS: un panel de edición que sigue guardando en el repo, sin base de datos.
-Se puede hacer más adelante sin cambiar nada de lo que ya hay.
+Publicar una entrada desde el móvil:
 
----
+1. Abrir la web y entrar en `/admin` (merece la pena guardarla en la pantalla de
+   inicio: se abre como una app).
+2. **Escribir entrada**.
+3. Título, resumen, foto de portada desde la galería, texto.
+4. Marcar **Publicada** y guardar. Sale al momento.
+
+Si es algo a medias, guardar sin marcar "Publicada" y seguir otro día.
+
+Sobre las cuatro entradas semanales de fotos: el campo de texto admite Markdown,
+pero para una foto y dos frases no hace falta usarlo. Título, foto, dos líneas y
+listo.
 
 ## 8. Decisiones tomadas y pendientes
 
 ### Tomadas
 
-- Estático, sin backend ni base de datos.
-- Contenido en Markdown dentro del repo, no en un CMS externo.
-- Sin comentarios.
-- Afiliación como ingreso principal, anuncios como secundario.
+- Astro en modo servidor sobre Supabase, desplegado en Vercel. Todo gratis.
+- Inicio de sesión con Google, con lista blanca de correos en base de datos.
+- Seguridad en la base de datos (RLS), no solo en el código de la web.
+- Contenido en Markdown, en un campo de texto. Sin editor visual.
+- Los cupones retirados se desactivan, no se borran.
+- Sin comentarios del público.
 - Español únicamente, de momento.
-- Los códigos retirados se marcan `activo: false`, no se borran.
+- Afiliación como ingreso principal, anuncios como secundario.
 
 ### Pendientes
 
 - Nombre del dominio.
 - Datos del titular para el aviso legal.
-- Quién escribe las entradas y con qué frecuencia.
-- Si hace falta Decap CMS o basta con GitHub.
-- Ritmo de publicación objetivo.
+- Los dos correos de Google que entran al panel.
+- Si las opiniones deben salir en la portada o solo dentro de las reseñas.
 
 ---
 
@@ -321,7 +388,8 @@ Se puede hacer más adelante sin cambiar nada de lo que ya hay.
 | Riesgo | Qué hacer |
 |---|---|
 | AdSense rechaza el sitio | Esperado sin dominio propio. Comprarlo antes de solicitar |
+| Alguien no autorizado entra al panel | Tres capas: middleware, API y RLS. La de base de datos es la que cuenta |
+| Se borra una entrada sin querer | Ahora mismo no hay papelera. Es el hueco más claro de la v1 |
+| Supabase pausa el proyecto por inactividad | Solo si la web se queda meses parada. Se reactiva desde su panel |
 | El blog se queda sin actualizar | Mejor una entrada al mes sostenida que cinco de golpe y nada más |
-| Un código caduca y sigue publicado | Añadir campo `caduca` y ocultarlo solo en el build |
-| Instagram cambia las reglas | Es justamente el motivo de tener web propia |
 | Los anuncios estropean la experiencia | Las reglas del 3.3 son el límite. Si molestan, se quitan |

@@ -1,0 +1,88 @@
+---
+import SubirFoto from './SubirFoto.astro';
+interface Props { accion: string; opinion?: any }
+const { accion, opinion } = Astro.props;
+const editando = Boolean(opinion);
+---
+<form class="form" data-accion={accion} data-editando={String(editando)}>
+  <div class="fila">
+    <div class="campo">
+      <label for="producto">Producto</label>
+      <input id="producto" name="producto" required value={opinion?.producto ?? ''} placeholder="Arnés de pata de gallo" />
+    </div>
+    <div class="campo">
+      <label for="marca">Marca</label>
+      <input id="marca" name="marca" value={opinion?.marca ?? ''} placeholder="My Pug & Co." />
+    </div>
+  </div>
+
+  <div class="campo">
+    <label for="nota">Nota (1 a 5)</label>
+    <select id="nota" name="nota">
+      {[5, 4, 3, 2, 1].map((n) => (
+        <option value={n} selected={(opinion?.nota ?? 5) === n}>{'★'.repeat(n)}{'☆'.repeat(5 - n)}</option>
+      ))}
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="texto">Qué tal</label>
+    <textarea id="texto" name="texto" required style="min-height:130px">{opinion?.texto ?? ''}</textarea>
+  </div>
+
+  <SubirFoto valor={opinion?.foto_url} nombre="foto_url" etiqueta="Foto del producto" />
+
+  <label class="check">
+    <input type="checkbox" name="publicada" checked={opinion?.publicada ?? true} />
+    Publicada
+  </label>
+
+  <div class="acciones">
+    <button class="btn" type="submit">{editando ? 'Guardar cambios' : 'Crear opinión'}</button>
+    <a class="btn btn--fantasma" href="/admin/opiniones/">Cancelar</a>
+    {editando && <button class="btn btn--peligro" type="button" id="borrar">Eliminar</button>}
+  </div>
+
+  <p class="form__estado" id="estado" role="status"></p>
+</form>
+
+<script is:inline>
+  const form = document.querySelector('.form');
+  const estado = document.getElementById('estado');
+  const editando = form.dataset.editando === 'true';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const cuerpo = {
+      producto: f.get('producto'),
+      marca: f.get('marca') || null,
+      nota: Number(f.get('nota')),
+      texto: f.get('texto'),
+      foto_url: f.get('foto_url') || null,
+      publicada: f.get('publicada') === 'on',
+    };
+
+    estado.textContent = 'Guardando…';
+    const r = await fetch(form.dataset.accion, {
+      method: editando ? 'PATCH' : 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+    if (r.ok) location.href = '/admin/opiniones/';
+    else estado.textContent = 'No se pudo guardar: ' + (await r.text());
+  });
+
+  document.getElementById('borrar')?.addEventListener('click', async () => {
+    if (!confirm('¿Eliminar esta opinión?')) return;
+    const r = await fetch(form.dataset.accion, { method: 'DELETE' });
+    if (r.ok) location.href = '/admin/opiniones/';
+    else estado.textContent = 'No se pudo eliminar.';
+  });
+</script>
+
+<style>
+  .form{max-width:560px}
+  .form__estado{font-size:14px;color:var(--cream-dim);margin-top:14px;min-height:20px}
+</style>

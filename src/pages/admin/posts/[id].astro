@@ -1,0 +1,13 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormPost from '../../../components/FormPost.astro';
+export const prerender = false;
+
+const { id } = Astro.params;
+const db = Astro.locals.db!;
+const { data: post } = await db.from('posts').select('*').eq('id', id).maybeSingle();
+if (!post) return Astro.redirect('/admin/posts/');
+---
+<Admin titulo="Editar entrada">
+  <FormPost accion={`/api/posts/${post.id}`} post={post} />
+</Admin>

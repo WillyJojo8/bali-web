@@ -1,0 +1,13 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import FormCupon from '../../../components/FormCupon.astro';
+export const prerender = false;
+
+const { id } = Astro.params;
+const db = Astro.locals.db!;
+const { data: cupon } = await db.from('cupones').select('*').eq('id', id).maybeSingle();
+if (!cupon) return Astro.redirect('/admin/cupones/');
+---
+<Admin titulo="Editar cupón">
+  <FormCupon accion={`/api/cupones/${cupon.id}`} cupon={cupon} />
+</Admin>

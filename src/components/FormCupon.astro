@@ -1,0 +1,111 @@
+---
+interface Props { accion: string; cupon?: any }
+const { accion, cupon } = Astro.props;
+const editando = Boolean(cupon);
+---
+<form class="form" data-accion={accion} data-editando={String(editando)}>
+  <div class="fila">
+    <div class="campo">
+      <label for="marca">Marca</label>
+      <input id="marca" name="marca" required value={cupon?.marca ?? ''} placeholder="My Pug & Co." />
+    </div>
+    <div class="campo">
+      <label for="codigo">Código</label>
+      <input id="codigo" name="codigo" required value={cupon?.codigo ?? ''} placeholder="BALI15" style="text-transform:uppercase" />
+    </div>
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      <label for="valor">Valor</label>
+      <input id="valor" name="valor" required value={cupon?.valor ?? ''} placeholder="15" />
+    </div>
+    <div class="campo">
+      <label for="unidad">Unidad</label>
+      <select id="unidad" name="unidad">
+        <option value="% dto" selected={cupon?.unidad === '% dto'}>% de descuento</option>
+        <option value="€ menos" selected={cupon?.unidad === '€ menos'}>€ menos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="campo">
+    <label for="que">Sobre qué aplica</label>
+    <input id="que" name="que" value={cupon?.que ?? ''} placeholder="Arneses y correas, en toda la web" />
+  </div>
+
+  <div class="campo">
+    <label for="url">Enlace a la tienda</label>
+    <input id="url" name="url" type="url" value={cupon?.url ?? ''} placeholder="https://..." />
+    <small>Pega aquí tu enlace de afiliado si lo tienes.</small>
+  </div>
+
+  <div class="campo">
+    <label for="caduca">Caduca el (opcional)</label>
+    <input id="caduca" name="caduca" type="date" value={cupon?.caduca ?? ''} />
+    <small>A partir de esa fecha deja de mostrarse solo.</small>
+  </div>
+
+  <label class="check">
+    <input type="checkbox" name="destacado" checked={cupon?.destacado ?? false} />
+    Destacado — sale girando alrededor de la foto de la portada
+  </label>
+
+  <label class="check">
+    <input type="checkbox" name="activo" checked={cupon?.activo ?? true} />
+    Activo — visible en la web
+  </label>
+
+  <div class="acciones">
+    <button class="btn" type="submit">{editando ? 'Guardar cambios' : 'Crear cupón'}</button>
+    <a class="btn btn--fantasma" href="/admin/cupones/">Cancelar</a>
+    {editando && <button class="btn btn--peligro" type="button" id="borrar">Eliminar</button>}
+  </div>
+
+  <p class="form__estado" id="estado" role="status"></p>
+</form>
+
+<script is:inline>
+  const form = document.querySelector('.form');
+  const estado = document.getElementById('estado');
+  const accion = form.dataset.accion;
+  const editando = form.dataset.editando === 'true';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const cuerpo = {
+      marca: f.get('marca'),
+      codigo: String(f.get('codigo')).toUpperCase().trim(),
+      valor: f.get('valor'),
+      unidad: f.get('unidad'),
+      que: f.get('que') || null,
+      url: f.get('url') || null,
+      caduca: f.get('caduca') || null,
+      destacado: f.get('destacado') === 'on',
+      activo: f.get('activo') === 'on',
+    };
+
+    estado.textContent = 'Guardando…';
+    const r = await fetch(accion, {
+      method: editando ? 'PATCH' : 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+    if (r.ok) location.href = '/admin/cupones/';
+    else estado.textContent = 'No se pudo guardar: ' + (await r.text());
+  });
+
+  document.getElementById('borrar')?.addEventListener('click', async () => {
+    if (!confirm('¿Eliminar este cupón? No se puede deshacer.\n\nSi solo quieres retirarlo de la web, desmarca "Activo" y guarda.')) return;
+    const r = await fetch(accion, { method: 'DELETE' });
+    if (r.ok) location.href = '/admin/cupones/';
+    else estado.textContent = 'No se pudo eliminar.';
+  });
+</script>
+
+<style>
+  .form{max-width:560px}
+  .form__estado{font-size:14px;color:var(--cream-dim);margin-top:14px;min-height:20px}
+</style>

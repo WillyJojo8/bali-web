@@ -1,0 +1,137 @@
+---
+import SubirFoto from './SubirFoto.astro';
+interface Props { accion: string; post?: any }
+const { accion, post } = Astro.props;
+const editando = Boolean(post);
+const fechaISO = post?.fecha ? new Date(post.fecha).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16);
+---
+<form class="form" data-accion={accion} data-editando={String(editando)}>
+  <div class="campo">
+    <label for="titulo">Título</label>
+    <input id="titulo" name="titulo" required value={post?.titulo ?? ''} placeholder="Probamos el arnés de pata de gallo" />
+  </div>
+
+  <div class="campo">
+    <label for="slug">Dirección web</label>
+    <input id="slug" name="slug" required value={post?.slug ?? ''} placeholder="probamos-el-arnes-de-pata-de-gallo" />
+    <small>Se rellena sola desde el título. Una vez publicada, mejor no cambiarla.</small>
+  </div>
+
+  <div class="campo">
+    <label for="resumen">Resumen</label>
+    <input id="resumen" name="resumen" required value={post?.resumen ?? ''} placeholder="Dos meses de uso diario. Qué aguanta y qué no." />
+    <small>Es lo que sale en el listado y en Google. Una o dos frases.</small>
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="resena" selected={post?.tipo === 'resena'}>Reseña de producto</option>
+        <option value="dia-a-dia" selected={post?.tipo === 'dia-a-dia'}>Día a día</option>
+        <option value="consejos" selected={post?.tipo === 'consejos'}>Consejos y cuidados</option>
+        <option value="colaboracion" selected={post?.tipo === 'colaboracion'}>Colaboración con marca</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="fecha">Fecha</label>
+      <input id="fecha" name="fecha" type="datetime-local" value={fechaISO} />
+    </div>
+  </div>
+
+  <SubirFoto valor={post?.portada_url} />
+
+  <div class="campo">
+    <label for="portada_alt">Descripción de la foto</label>
+    <input id="portada_alt" name="portada_alt" value={post?.portada_alt ?? ''} placeholder="Bali con el arnés en el parque" />
+    <small>Para quien no puede ver la imagen. También ayuda en Google.</small>
+  </div>
+
+  <div class="campo">
+    <label for="etiquetas">Etiquetas</label>
+    <input id="etiquetas" name="etiquetas" value={post?.etiquetas?.join(', ') ?? ''} placeholder="reseña, arneses" />
+    <small>Separadas por comas.</small>
+  </div>
+
+  <div class="campo">
+    <label for="cuerpo">Texto</label>
+    <textarea id="cuerpo" name="cuerpo" placeholder={'Escribe aquí.\n\n## Un subtítulo\n\n- Una lista\n- Otra cosa\n\n[Un enlace](https://...)'}>{post?.cuerpo ?? ''}</textarea>
+    <small>Markdown: ## para subtítulos, **negrita**, - para listas.</small>
+  </div>
+
+  <label class="check">
+    <input type="checkbox" name="patrocinado" checked={post?.patrocinado ?? false} />
+    Patrocinada — añade el aviso legal de colaboración al principio
+  </label>
+
+  <label class="check">
+    <input type="checkbox" name="publicado" checked={post?.publicado ?? false} />
+    Publicada — visible en la web
+  </label>
+
+  <div class="acciones">
+    <button class="btn" type="submit">{editando ? 'Guardar cambios' : 'Crear entrada'}</button>
+    <a class="btn btn--fantasma" href="/admin/posts/">Cancelar</a>
+    {editando && <button class="btn btn--peligro" type="button" id="borrar">Eliminar</button>}
+  </div>
+
+  <p class="form__estado" id="estado" role="status"></p>
+</form>
+
+<script is:inline>
+  const form = document.querySelector('.form');
+  const estado = document.getElementById('estado');
+  const editando = form.dataset.editando === 'true';
+  const titulo = form.querySelector('#titulo');
+  const slug = form.querySelector('#slug');
+
+  const aSlug = (s) => s.toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim().replace(/\s+/g, '-').slice(0, 70);
+
+  // Solo autocompleta mientras el slug siga vacío o sin tocar a mano.
+  let slugTocado = editando;
+  slug.addEventListener('input', () => { slugTocado = true; });
+  titulo.addEventListener('input', () => { if (!slugTocado) slug.value = aSlug(titulo.value); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const cuerpo = {
+      titulo: f.get('titulo'),
+      slug: aSlug(String(f.get('slug'))),
+      resumen: f.get('resumen'),
+      cuerpo: f.get('cuerpo'),
+      tipo: f.get('tipo'),
+      fecha: new Date(String(f.get('fecha'))).toISOString(),
+      portada_url: f.get('portada_url') || null,
+      portada_alt: f.get('portada_alt') || null,
+      etiquetas: String(f.get('etiquetas') || '').split(',').map((t) => t.trim()).filter(Boolean),
+      patrocinado: f.get('patrocinado') === 'on',
+      publicado: f.get('publicado') === 'on',
+    };
+
+    estado.textContent = 'Guardando…';
+    const r = await fetch(form.dataset.accion, {
+      method: editando ? 'PATCH' : 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+    if (r.ok) location.href = '/admin/posts/';
+    else estado.textContent = 'No se pudo guardar: ' + (await r.text());
+  });
+
+  document.getElementById('borrar')?.addEventListener('click', async () => {
+    if (!confirm('¿Eliminar esta entrada? No se puede deshacer.')) return;
+    const r = await fetch(form.dataset.accion, { method: 'DELETE' });
+    if (r.ok) location.href = '/admin/posts/';
+    else estado.textContent = 'No se pudo eliminar.';
+  });
+</script>
+
+<style>
+  .form{max-width:620px}
+  .form__estado{font-size:14px;color:var(--cream-dim);margin-top:14px;min-height:20px}
+</style>
