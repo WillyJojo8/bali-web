@@ -5,6 +5,12 @@ import codigos from '../data/codigos.json';
 const activos = codigos.filter((c) => c.activo);
 const cinta = activos.map((c) => `${c.codigo} · −${c.valor}${c.unidad.includes('€') ? '€' : '%'}`).join(' · ');
 const ruta = Astro.url.pathname;
+
+/**
+ * Solo para decidir si pintamos el enlace al panel: si hay cookie, es que
+ * alguien inició sesión alguna vez. Quien mande no es esto, es el middleware.
+ */
+const hayCookieSesion = Boolean(Astro.cookies.get('sb-access-token')?.value);
 ---
 <div class="cinta" aria-hidden="true">
   <div class="cinta__track">
@@ -20,6 +26,7 @@ const ruta = Astro.url.pathname;
       <a href="/" class:list={['nav__link', { on: ruta === '/' }]}>Inicio</a>
       <a href="/codigos/" class:list={['nav__link', { on: ruta.startsWith('/codigos') }]}>Códigos</a>
       <a href="/blog/" class:list={['nav__link', { on: ruta.startsWith('/blog') }]}>Blog</a>
+      {hayCookieSesion && <a href="/admin/" class="nav__link nav__link--panel">Panel</a>}
     </nav>
   </div>
 </header>
@@ -40,4 +47,7 @@ const ruta = Astro.url.pathname;
     text-transform:uppercase;text-decoration:none;color:var(--cream-dim);padding:4px 0}
   .nav__link:hover{color:var(--cream)}
   .nav__link.on{color:var(--tang);border-bottom:2px solid var(--tang)}
+  .nav__link--panel{color:var(--pink);border:1px solid rgba(255,46,99,.4);
+    border-radius:100px;padding:4px 11px}
+  .nav__link--panel:hover{color:#fff;background:var(--pink);border-color:var(--pink)}
 </style>

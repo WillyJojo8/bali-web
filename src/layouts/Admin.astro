@@ -24,6 +24,7 @@ const ruta = Astro.url.pathname;
         <a href="/admin/opiniones/" class:list={[{ on: ruta.startsWith('/admin/opiniones') }]}>Opiniones</a>
       </nav>
       <div class="pnav__yo">
+        <a class="pnav__web" href="/" target="_blank" rel="noopener">Ver web ↗</a>
         <span>{usuario.nombre}</span>
         <button id="salir" type="button">Salir</button>
       </div>
@@ -55,6 +56,9 @@ const ruta = Astro.url.pathname;
       text-transform:uppercase;text-decoration:none;color:var(--cream-dim)}
     .pnav nav a.on{color:var(--tang)}
     .pnav__yo{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--cream-dim)}
+    .pnav__web{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.08em;
+      text-transform:uppercase;text-decoration:none;color:var(--tang)}
+    .pnav__web:hover{color:var(--cream)}
     .pnav__yo button{background:none;border:1px solid var(--linea);color:var(--cream-dim);
       border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer}
 
