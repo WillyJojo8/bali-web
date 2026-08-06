@@ -309,9 +309,9 @@ Una vez montado, **el día a día no toca el repositorio**: se hace todo desde
 ### Orden recomendado
 
 1. **Crear el proyecto en Supabase** (gratis, sin tarjeta). Apunta la URL y la
-   clave *anon*.
+   clave *publishable*.
 2. **Ejecutar `supabase/schema.sql`** en SQL Editor → New query → Run. Antes,
-   cambia los dos correos del `insert into admins` por los vuestros.
+   cambia el correo del `insert into admins` por el vuestro.
 3. **Activar Google** en Authentication → Providers → Google. Pide un Client ID
    de Google Cloud; el propio Supabase enlaza al sitio donde sacarlo.
 4. **Comprar el dominio.** Unos 11 €/año. No es opcional si quieres anuncios.

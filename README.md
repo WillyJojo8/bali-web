@@ -11,7 +11,7 @@ Astro 7 · Supabase · Vercel. Todo en capa gratuita.
 **1. Supabase.** Crea un proyecto en [supabase.com](https://supabase.com) (gratis).
 
 **2. Base de datos.** SQL Editor → New query → pega `supabase/schema.sql` → Run.
-⚠️ Antes cambia los correos del `insert into admins` por los vuestros.
+⚠️ Antes cambia el correo del `insert into admins` por el vuestro.
 
 **3. Google.** Authentication → Providers → Google → activar.
 En URL Configuration añade como redirect: `https://TU-DOMINIO/admin/callback`
@@ -20,7 +20,7 @@ y `http://localhost:4321/admin/callback`.
 **4. Variables.**
 
 ```bash
-cp .env.example .env   # y rellena URL y clave anon
+cp .env.example .env   # y rellena URL y clave publishable
 npm install
 npm run dev            # http://localhost:4321
 ```
