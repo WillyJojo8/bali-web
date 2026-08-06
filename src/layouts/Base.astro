@@ -46,6 +46,12 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
       crossorigin="anonymous"
     ></script>
   )}
+
+  {/* Analítica de Vercel: sin cookies, no necesita banner de consentimiento. */}
+  <script is:inline>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script is:inline defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <Cabecera />
