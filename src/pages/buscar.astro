@@ -1,0 +1,153 @@
+---
+import Base from '../layouts/Base.astro';
+import TicketCodigo from '../components/TicketCodigo.astro';
+import TarjetaPost from '../components/TarjetaPost.astro';
+import { getPosts, getCupones } from '../lib/contenido';
+import { HERRAMIENTAS } from '../lib/herramientas';
+import { slug } from '../lib/seo';
+
+export const prerender = false;
+
+/**
+ * Buscador del sitio.
+ *
+ * Va en el servidor y no en el cliente porque tiene que mirar dentro del
+ * cuerpo de las entradas, y mandar todos los artículos al navegador para
+ * buscar en ellos sería absurdo.
+ *
+ * La página lleva noindex: los resultados de búsqueda no aportan nada a
+ * Google y, si los indexara, competirían con las páginas de verdad. Existe
+ * como destino del SearchAction del JSON-LD, que es lo que permite que
+ * aparezca una caja de búsqueda del sitio en los resultados.
+ */
+const consulta = (Astro.url.searchParams.get('q') ?? '').trim();
+
+const normaliza = (s: string) =>
+  (s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const q = normaliza(consulta);
+const palabras = q.split(/\s+/).filter(Boolean);
+const contiene = (texto: string) => palabras.every((p) => normaliza(texto).includes(p));
+
+let posts: Awaited<ReturnType<typeof getPosts>> = [];
+let cupones: Awaited<ReturnType<typeof getCupones>> = [];
+let herramientas: typeof HERRAMIENTAS = [];
+
+if (q) {
+  const [todosPosts, todosCupones] = await Promise.all([getPosts(), getCupones()]);
+
+  posts = todosPosts.filter((p) =>
+    contiene([p.titulo, p.resumen, p.cuerpo, (p.etiquetas ?? []).join(' ')].join(' ')),
+  );
+  cupones = todosCupones.filter((c) =>
+    contiene([c.marca, c.que ?? '', c.codigo, c.categoria ?? ''].join(' ')),
+  );
+  herramientas = HERRAMIENTAS.filter((h) =>
+    contiene([h.titulo, h.corto, h.descripcion, h.busqueda].join(' ')),
+  );
+}
+
+const total = posts.length + cupones.length + herramientas.length;
+---
+<Base
+  titulo={consulta ? `Buscar «${consulta}»` : 'Buscar'}
+  descripcion="Busca entre los códigos de descuento, las entradas del blog y las calculadoras."
+  noindex
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Buscador</p>
+    <h1 class="display">BUSCAR</h1>
+    <form class="buscador" method="get" action="/buscar/" role="search">
+      <input
+        type="search"
+        name="q"
+        value={consulta}
+        placeholder="arnés, pienso, caniche…"
+        autocomplete="off"
+        enterkeyhint="search"
+        autofocus
+      />
+      <button type="submit">Buscar</button>
+    </form>
+    {consulta && (
+      <p class="cuenta">
+        {total === 0
+          ? `Nada coincide con «${consulta}».`
+          : `${total} ${total === 1 ? 'resultado' : 'resultados'} para «${consulta}».`}
+      </p>
+    )}
+  </section>
+
+  {cupones.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div><p class="eyebrow">Códigos</p><h2 class="display">CUPONES</h2></div>
+        <span class="seccion__meta">{cupones.length}</span>
+      </div>
+      <div class="lista">{cupones.map((c) => <TicketCodigo {...c} />)}</div>
+    </section>
+  )}
+
+  {posts.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div><p class="eyebrow">Artículos</p><h2 class="display">BLOG</h2></div>
+        <span class="seccion__meta">{posts.length}</span>
+      </div>
+      <div class="lista">
+        {posts.map((p) => (
+          <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+            fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt} etiquetas={p.etiquetas} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  {herramientas.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div><p class="eyebrow">Calculadoras</p><h2 class="display">HERRAMIENTAS</h2></div>
+        <span class="seccion__meta">{herramientas.length}</span>
+      </div>
+      <ul class="herr">
+        {herramientas.map((h) => (
+          <li><a href={h.ruta}><span>{h.emoji}</span> {h.titulo}</a></li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {consulta && total === 0 && (
+    <section class="seccion">
+      <p class="vacio">
+        Prueba con menos palabras, o mira directamente
+        <a href="/codigos/"> los códigos de descuento</a>,
+        <a href="/blog/"> el blog</a> o
+        <a href="/herramientas/"> las calculadoras</a>.
+      </p>
+    </section>
+  )}
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(30px,8vw,48px);margin:8px 0 18px}
+  .buscador{display:flex;gap:10px}
+  .buscador input{flex:1;font-family:inherit;font-size:16px;padding:13px 16px;border-radius:12px;
+    background:var(--bg-2);border:1px solid var(--linea);color:var(--cream);min-width:0}
+  .buscador input:focus{border-color:var(--tang);outline:none}
+  .buscador button{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.1em;
+    text-transform:uppercase;font-weight:700;background:var(--cream);color:var(--bg);
+    border:0;border-radius:12px;padding:0 18px;cursor:pointer}
+  .buscador button:hover{background:var(--tang)}
+  .cuenta{color:var(--cream-dim);font-size:14px;margin:14px 0 0}
+
+  .lista{display:flex;flex-direction:column;gap:14px}
+  .vacio{color:var(--cream-dim)}
+  .vacio a{color:var(--tang)}
+
+  .herr{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .herr a{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:12px;
+    padding:14px 16px;text-decoration:none;font-weight:600;font-size:15px}
+  .herr a:hover{background:var(--card-2);color:var(--tang)}
+</style>
