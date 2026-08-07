@@ -1,8 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
 import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
-import { getPost } from '../../lib/contenido';
-import { aHtml } from '../../lib/markdown';
+import TarjetaPost from '../../components/TarjetaPost.astro';
+import { getPost, getRelacionados } from '../../lib/contenido';
+import { aHtml, minutosLectura } from '../../lib/markdown';
+import { articulo } from '../../lib/jsonld';
+import { slug as aSlug } from '../../lib/seo';
+import { fechaLegible } from '../../lib/fechas';
 
 export const prerender = false;
 
@@ -10,19 +14,40 @@ const { slug } = Astro.params;
 const post = await getPost(slug!);
 if (!post) return new Response(null, { status: 404, statusText: 'No encontrada' });
 
-const legible = new Date(post.fecha).toLocaleDateString('es-ES', {
-  day: 'numeric', month: 'long', year: 'numeric',
-});
+const legible = fechaLegible(post.fecha);
+const minutos = minutosLectura(post.cuerpo);
 const cuerpo = aHtml(post.cuerpo);
+const relacionados = await getRelacionados(post);
+
+const esquema = [articulo(Astro.site, post)];
 ---
-<Base titulo={post.titulo} descripcion={post.resumen} imagen={post.portada_url ?? undefined}>
+<Base
+  titulo={post.titulo}
+  descripcion={post.resumen}
+  imagen={post.portada_url ?? undefined}
+  tipo="article"
+  publicado={post.fecha}
+  miga={[
+    { nombre: 'Blog', url: '/blog/' },
+    { nombre: post.titulo, url: `/blog/${post.slug}/` },
+  ]}
+  esquema={esquema}
+>
   <article class="post">
     <header class="post__head">
-      <time class="post__fecha" datetime={post.fecha}>{legible}</time>
+      <p class="post__meta">
+        <time datetime={post.fecha}>{legible}</time>
+        <span>·</span>
+        <span>{minutos} min de lectura</span>
+      </p>
       <h1 class="post__titulo display">{post.titulo}</h1>
       <p class="post__resumen">{post.resumen}</p>
       {post.etiquetas.length > 0 && (
-        <ul class="post__tags">{post.etiquetas.map((t) => <li>{t}</li>)}</ul>
+        <ul class="post__tags">
+          {post.etiquetas.map((t) => (
+            <li><a href={`/blog/etiqueta/${aSlug(t)}/`}>{t}</a></li>
+          ))}
+        </ul>
       )}
     </header>
 
@@ -39,7 +64,33 @@ const cuerpo = aHtml(post.cuerpo);
 
     <div class="post__cuerpo" set:html={cuerpo} />
 
+    <aside class="cta">
+      <p class="cta__eyebrow">Antes de comprar</p>
+      <p class="cta__texto">
+        Si esta entrada te ha convencido de algo, mira si hay código de descuento:
+        los reviso cada semana y están todos en una página.
+      </p>
+      <a class="cta__boton" href="/codigos/">Ver los códigos →</a>
+    </aside>
+
     <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_ARTICULO} />
+
+    {relacionados.length > 0 && (
+      <section class="seccion">
+        <div class="seccion__head">
+          <div>
+            <p class="eyebrow">Sigue leyendo</p>
+            <h2 class="display">RELACIONADAS</h2>
+          </div>
+        </div>
+        <div class="lista">
+          {relacionados.map((p) => (
+            <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+              fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt} etiquetas={p.etiquetas} />
+          ))}
+        </div>
+      </section>
+    )}
 
     <a class="post__volver" href="/blog/">← Todas las entradas</a>
   </article>
@@ -48,14 +99,17 @@ const cuerpo = aHtml(post.cuerpo);
 <style>
   .post{padding-top:36px}
   .post__head{margin-bottom:24px}
-  .post__fecha{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
+  .post__meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0;
+    font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--tang)}
+  .post__meta span:last-child{color:var(--cream-dim)}
   .post__titulo{font-size:clamp(34px,9vw,52px);margin:10px 0 0}
   .post__resumen{color:var(--cream-dim);font-size:17px;margin:12px 0 0}
   .post__tags{display:flex;gap:6px;flex-wrap:wrap;list-style:none;padding:0;margin:14px 0 0}
-  .post__tags li{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.1em;
-    text-transform:uppercase;border:1px solid var(--linea);border-radius:100px;
-    padding:3px 8px;color:var(--cream-dim)}
+  .post__tags a{display:inline-block;font-family:"Space Mono",monospace;font-size:9.5px;
+    letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--linea);border-radius:100px;
+    padding:4px 9px;color:var(--cream-dim);text-decoration:none}
+  .post__tags a:hover{color:var(--tang);border-color:var(--tang)}
   .post__portada{width:100%;border-radius:var(--radio);margin-bottom:28px}
 
   .post__cuerpo :global(h2){font-family:"Anybody",sans-serif;font-variation-settings:"wdth" 120;
@@ -68,6 +122,21 @@ const cuerpo = aHtml(post.cuerpo);
   .post__cuerpo :global(img){border-radius:var(--radio);margin:24px 0;max-width:100%}
   .post__cuerpo :global(blockquote){border-left:3px solid var(--pink);margin:24px 0;
     padding:2px 0 2px 16px;color:var(--cream-dim);font-style:italic}
+  .post__cuerpo :global(table){width:100%;border-collapse:collapse;margin:0 0 20px;font-size:14.5px}
+  .post__cuerpo :global(th),.post__cuerpo :global(td){text-align:left;padding:10px 12px;
+    border-bottom:1px solid var(--linea)}
+
+  .cta{background:linear-gradient(135deg,rgba(255,46,99,.14),rgba(255,159,28,.14));
+    border:1px solid rgba(255,159,28,.28);border-radius:var(--radio);padding:20px;margin:36px 0 0}
+  .cta__eyebrow{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--tang);margin:0 0 8px}
+  .cta__texto{margin:0;font-size:15.5px}
+  .cta__boton{display:inline-block;margin-top:14px;background:var(--cream);color:var(--bg);
+    font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:700;text-decoration:none;padding:11px 16px;border-radius:10px}
+  .cta__boton:hover{background:var(--tang)}
+
+  .lista{display:flex;flex-direction:column;gap:14px}
 
   .post__volver{display:inline-block;margin-top:20px;font-family:"Space Mono",monospace;
     font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim);text-decoration:none}

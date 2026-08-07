@@ -2,17 +2,60 @@
 import Base from '../../layouts/Base.astro';
 import TarjetaPost from '../../components/TarjetaPost.astro';
 import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
-import { getPosts } from '../../lib/contenido';
+import { getPosts, getEtiquetas } from '../../lib/contenido';
 
 export const prerender = false;
+
 const posts = await getPosts();
+const etiquetas = (await getEtiquetas(posts)).slice(0, 14);
+
+/**
+ * El listado no tenía <h1>: empezaba en <h2>. Para Google, una página sin
+ * encabezado principal es una página sin tema.
+ */
+const esquema = [
+  {
+    '@type': 'Blog',
+    name: 'El blog de Bali',
+    description: 'Reseñas de productos para perros, consejos y el día a día de un caniche toy.',
+    inLanguage: 'es-ES',
+    blogPost: posts.slice(0, 10).map((p) => ({
+      '@type': 'BlogPosting',
+      headline: p.titulo.slice(0, 110),
+      datePublished: p.fecha,
+      url: new URL(`/blog/${p.slug}/`, Astro.site ?? 'https://bali.example.com').toString(),
+    })),
+  },
+];
 ---
-<Base titulo="Blog" descripcion="Reseñas, consejos y el día a día de Bali.">
+<Base
+  titulo="Blog sobre perros: reseñas, consejos y día a día"
+  descripcion="Reseñas honestas de productos para perros, consejos de cuidados y el día a día de Bali, un caniche toy chocolate. Sin notas de prensa."
+  miga={[{ nombre: 'Blog', url: '/blog/' }]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Todo lo publicado</p>
+    <h1 class="display">EL BLOG DE BALI</h1>
+    <p class="entradilla">
+      Lo que probamos, lo que nos funciona y lo que no. Reseñas de arneses,
+      camas, pienso y juguetes; consejos de cuidados de perro pequeño; y el día
+      a día de un caniche toy que opina de todo.
+    </p>
+    {etiquetas.length > 0 && (
+      <ul class="tags">
+        {etiquetas.map((e) => (
+          <li><a href={`/blog/etiqueta/${e.slug}/`}>{e.nombre} <span>{e.cuantas}</span></a></li>
+        ))}
+      </ul>
+    )}
+  </section>
+
   <section class="seccion">
     <div class="seccion__head">
       <div>
-        <p class="eyebrow">Todo lo publicado</p>
-        <h2 class="display">BLOG</h2>
+        <p class="eyebrow">Lo último primero</p>
+        <h2 class="display">ENTRADAS</h2>
       </div>
       <span class="seccion__meta">{posts.length} {posts.length === 1 ? 'entrada' : 'entradas'}</span>
     </div>
@@ -35,6 +78,15 @@ const posts = await getPosts();
 </Base>
 
 <style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(32px,8.4vw,52px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 0;max-width:56ch}
+  .tags{list-style:none;padding:0;margin:20px 0 0;display:flex;gap:8px;flex-wrap:wrap}
+  .tags a{display:inline-flex;gap:7px;align-items:center;background:var(--card);border-radius:100px;
+    padding:7px 13px;text-decoration:none;font-size:13.5px}
+  .tags a:hover{background:var(--card-2);color:var(--tang)}
+  .tags span{font-family:"Space Mono",monospace;font-size:10px;color:var(--cream-dim)}
+
   .lista{display:flex;flex-direction:column;gap:14px}
   .vacio{color:var(--cream-dim)}
 </style>

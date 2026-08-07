@@ -1,0 +1,98 @@
+---
+import Base from '../../../layouts/Base.astro';
+import TarjetaPost from '../../../components/TarjetaPost.astro';
+import HuecoAnuncio from '../../../components/HuecoAnuncio.astro';
+import { getPosts, getEtiquetas, getPostsPorEtiqueta } from '../../../lib/contenido';
+
+export const prerender = false;
+
+/**
+ * Listado por etiqueta.
+ *
+ * Una etiqueta es un tema, y un tema es una búsqueda: "arnés", "peluquería",
+ * "caniche toy". Cada una tiene su página para poder competir por ese
+ * término sin depender de que una entrada concreta lo haga.
+ */
+const pedida = Astro.params.etiqueta!;
+const posts = await getPostsPorEtiqueta(pedida);
+if (posts.length === 0) return new Response(null, { status: 404, statusText: 'Etiqueta sin entradas' });
+
+/** El nombre bonito, con acentos y mayúsculas, sale de las entradas. */
+const todas = await getEtiquetas(await getPosts());
+const etiqueta = todas.find((e) => e.slug === pedida);
+const nombre = etiqueta?.nombre ?? pedida;
+const otras = todas.filter((e) => e.slug !== pedida).slice(0, 12);
+
+const esquema = [
+  {
+    '@type': 'CollectionPage',
+    name: `Entradas sobre ${nombre}`,
+    numberOfItems: posts.length,
+  },
+];
+---
+<Base
+  titulo={`${nombre} — artículos sobre perros`}
+  descripcion={`${posts.length} ${posts.length === 1 ? 'entrada' : 'entradas'} sobre ${nombre.toLowerCase()}: lo que Bali ha probado, con fotos y opinión honesta.`}
+  miga={[
+    { nombre: 'Blog', url: '/blog/' },
+    { nombre, url: `/blog/etiqueta/${pedida}/` },
+  ]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Etiqueta</p>
+    <h1 class="display">{nombre}</h1>
+    <p class="entradilla">
+      {posts.length} {posts.length === 1 ? 'entrada' : 'entradas'} sobre {nombre.toLowerCase()}.
+    </p>
+  </section>
+
+  <section class="seccion">
+    <div class="lista">
+      {posts.map((p, i) => (
+        <>
+          <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+            fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt} etiquetas={p.etiquetas} />
+          {i === 4 && <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />}
+        </>
+      ))}
+    </div>
+  </section>
+
+  {otras.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Otros temas</p>
+          <h2 class="display">ETIQUETAS</h2>
+        </div>
+      </div>
+      <ul class="tags">
+        {otras.map((e) => (
+          <li><a href={`/blog/etiqueta/${e.slug}/`}>{e.nombre} <span>{e.cuantas}</span></a></li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <p class="volver"><a href="/blog/">← Todas las entradas</a></p>
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(32px,9vw,52px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:14px 0 0}
+  .lista{display:flex;flex-direction:column;gap:14px}
+
+  .tags{list-style:none;padding:0;margin:0;display:flex;gap:8px;flex-wrap:wrap}
+  .tags a{display:inline-flex;gap:7px;align-items:center;background:var(--card);border-radius:100px;
+    padding:8px 14px;text-decoration:none;font-size:14px}
+  .tags a:hover{background:var(--card-2);color:var(--tang)}
+  .tags span{font-family:"Space Mono",monospace;font-size:10.5px;color:var(--cream-dim)}
+
+  .volver{margin-top:12px}
+  .volver a{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--cream-dim);text-decoration:none}
+  .volver a:hover{color:var(--tang)}
+</style>
