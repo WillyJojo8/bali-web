@@ -11,6 +11,8 @@
 --                   mueven los filtros de /codigos/. Los valores válidos
 --                   están en src/lib/seo.ts, en CATEGORIAS.
 --
+--  · valor        — deja de ser obligatorio (ver más abajo).
+--
 --  · verificado_en — el día que comprobaste a mano que el código funciona.
 --                   Sale en cada cupón como "verificado hace tres días".
 --                   Es la diferencia entre esta web y las páginas de
@@ -21,8 +23,10 @@
 alter table cupones add column if not exists categoria text not null default 'otros';
 alter table cupones add column if not exists verificado_en date;
 
--- Hay tiendas que no dicen cuánto descuenta el código hasta que lo aplicas.
--- Antes `valor` era obligatorio y había que inventarse una cifra.
+-- No todas las tiendas dicen cuánto descuenta el código, así que el valor
+-- pasa a ser opcional: null = "no lo sabemos", y la web enseña el cupón sin
+-- cifra en vez de inventarse una. La tabla se creó con `not null`, y
+-- schema.sql no la corrige porque es `create table if not exists`.
 alter table cupones alter column valor drop not null;
 
 -- Los cupones que ya existían no tienen fecha de comprobación. Se les pone
