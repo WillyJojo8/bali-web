@@ -2,10 +2,9 @@
 import Base from '../layouts/Base.astro';
 import TicketCodigo from '../components/TicketCodigo.astro';
 import HuecoAnuncio from '../components/HuecoAnuncio.astro';
-import Faq from '../components/Faq.astro';
 import { getCupones, getTiendas } from '../lib/contenido';
-import { CATEGORIAS, FAQ_CODIGOS, slug } from '../lib/seo';
-import { listaOfertas, faq } from '../lib/jsonld';
+import { CATEGORIAS, slug } from '../lib/seo';
+import { listaOfertas } from '../lib/jsonld';
 import { mesActual } from '../lib/fechas';
 
 export const prerender = false;
@@ -23,10 +22,7 @@ const descripcion =
   `${cupones.length} códigos de descuento comprobados para tiendas de perros: accesorios, ` +
   `pienso, juguetes y peluquería. Copia el cupón y ahorra en tu pedido. Actualizado en ${mes}.`;
 
-const esquema = [
-  listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.marca)}/`),
-  faq(FAQ_CODIGOS),
-];
+const esquema = [listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.marca)}/`)];
 ---
 <Base
   titulo={titulo}
@@ -130,8 +126,6 @@ const esquema = [
       <li><strong>Pégalo antes de pagar.</strong> En la casilla de «cupón» o «código promocional» del carrito.</li>
     </ol>
   </section>
-
-  <Faq preguntas={FAQ_CODIGOS} />
 </Base>
 
 <style>

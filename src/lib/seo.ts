@@ -97,17 +97,13 @@ export function descuento(valor?: string | null, unidad?: string | null): string
 }
 
 /**
- * Preguntas frecuentes de la página de códigos.
- *
- * Salen en la página Y en el JSON-LD de tipo FAQPage. Google puede
- * mostrarlas desplegables debajo del resultado, que ocupa el doble de
- * alto en la página de resultados. Por eso las respuestas son cortas:
- * las largas se cortan con puntos suspensivos.
- */
-/**
  * Preguntas de la página de una tienda concreta.
  *
- * Se generan con el nombre dentro a propósito: si todas las tiendas
+ * Salen en la página Y en el JSON-LD de tipo FAQPage, que Google puede
+ * mostrar desplegable debajo del resultado. Por eso las respuestas son
+ * cortas: las largas se cortan con puntos suspensivos.
+ *
+ * Se generan con el nombre de la tienda dentro a propósito: si todas
  * repitieran el mismo texto, Google trataría las páginas como duplicadas y
  * dejaría de indexarlas.
  */
@@ -133,26 +129,3 @@ export function faqTienda(tienda: string, dto: string | null, cuantos: number) {
     },
   ];
 }
-
-export const FAQ_CODIGOS = [
-  {
-    p: '¿Cómo uso un código de descuento?',
-    r: 'Toca el código para copiarlo, entra en la tienda desde el botón y pégalo en la casilla de "cupón" o "código promocional" antes de pagar. El descuento se aplica en el resumen del pedido.',
-  },
-  {
-    p: '¿Los cupones caducan?',
-    r: 'Algunos sí. Cada código muestra su fecha de caducidad si la tiene, y los caducados desaparecen solos de la web ese mismo día. Si no ves fecha, es que no caduca.',
-  },
-  {
-    p: '¿El código no funciona, qué hago?',
-    r: 'Comprueba que lo has pegado sin espacios y que tu pedido llega al mínimo de compra de la tienda. Muchos cupones no se pueden juntar con rebajas ya aplicadas. Si aun así falla, escríbeme y lo reviso.',
-  },
-  {
-    p: '¿Gano algo si compro con estos códigos?',
-    r: 'Algunos enlaces son de afiliado: la tienda me paga una comisión pequeña. A ti no te cuesta más, y de hecho pagas menos que sin el código. Solo enlazo cosas que Bali ha probado.',
-  },
-  {
-    p: '¿Cada cuánto se actualizan?',
-    r: 'Los reviso cada semana. Cada cupón lleva la fecha de la última comprobación, para que sepas si es de hoy o del mes pasado.',
-  },
-];
