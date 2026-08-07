@@ -1,30 +1,62 @@
 ---
 import perfil from '../data/perfil.json';
+import { HERRAMIENTAS } from '../lib/herramientas';
+
+/**
+ * El pie no es decoración: es la red de enlaces internos que hace que
+ * cualquier página del sitio esté a un clic de las demás. Google recorre el
+ * sitio por aquí tanto como por el menú.
+ */
 const anio = new Date().getFullYear();
 ---
 <footer class="pie">
   <div class="wrap">
-    <nav class="pie__redes">
-      {perfil.redes.map((r) => (
-        <a href={r.url} target="_blank" rel="noopener">{r.nombre}</a>
-      ))}
-      <a href={`mailto:${perfil.email}`}>Colaboraciones</a>
-    </nav>
-    <nav class="pie__legal">
+    <div class="pie__cols">
+      <nav class="pie__col" aria-label="Ahorrar">
+        <h2>Ahorrar</h2>
+        <a href="/codigos/">Cupones de descuento para perros</a>
+        <a href="/tiendas/">Tiendas con código activo</a>
+        <a href="/opiniones/">Opiniones de productos</a>
+      </nav>
+      <nav class="pie__col" aria-label="Calculadoras">
+        <h2>Calculadoras</h2>
+        {HERRAMIENTAS.map((h) => <a href={h.ruta}>{h.corto}</a>)}
+      </nav>
+      <nav class="pie__col" aria-label="Bali">
+        <h2>Bali</h2>
+        <a href="/blog/">Blog</a>
+        {perfil.redes.map((r) => (
+          <a href={r.url} target="_blank" rel="noopener">{r.nombre}</a>
+        ))}
+        <a href={`mailto:${perfil.email}`}>Colaboraciones</a>
+      </nav>
+    </div>
+
+    <nav class="pie__legal" aria-label="Legal">
       <a href="/aviso-legal/">Aviso legal</a>
       <a href="/privacidad/">Privacidad</a>
       <a href="/rss.xml">RSS</a>
+      <a href="/sitemap.xml">Mapa del sitio</a>
     </nav>
     <p class="pie__firma">© {anio} {perfil.nombre} · {perfil.raza} · Hecho con patas</p>
   </div>
 </footer>
 
 <style>
-  .pie{border-top:1px solid var(--linea);margin-top:80px;padding:36px 0 44px;text-align:center}
-  .pie nav{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
-  .pie a{font-size:14px;color:var(--cream-dim);text-decoration:none}
-  .pie a:hover{color:var(--tang)}
-  .pie__legal a{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .pie{border-top:1px solid var(--linea);margin-top:80px;padding:40px 0 44px}
+  .pie__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:28px;
+    margin-bottom:34px}
+  .pie__col{display:flex;flex-direction:column;gap:9px}
+  .pie__col h2{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--tang);margin:0 0 3px;font-weight:400}
+  .pie__col a{font-size:14px;color:var(--cream-dim);text-decoration:none}
+  .pie__col a:hover{color:var(--cream)}
+
+  .pie__legal{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;
+    border-top:1px solid var(--linea);padding-top:24px}
+  .pie__legal a{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--cream-dim);text-decoration:none}
+  .pie__legal a:hover{color:var(--tang)}
   .pie__firma{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:rgba(255,243,233,.3);margin:18px 0 0}
+    text-transform:uppercase;color:rgba(255,243,233,.3);margin:18px 0 0;text-align:center}
 </style>

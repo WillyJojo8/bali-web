@@ -2,21 +2,51 @@
 import Base from '../layouts/Base.astro';
 import TicketCodigo from '../components/TicketCodigo.astro';
 import TarjetaPost from '../components/TarjetaPost.astro';
+import Estrellas from '../components/Estrellas.astro';
 import HuecoAnuncio from '../components/HuecoAnuncio.astro';
 import perfil from '../data/perfil.json';
-import { getCupones, getPosts } from '../lib/contenido';
+import { getCupones, getPosts, getOpiniones } from '../lib/contenido';
+import { HERRAMIENTAS } from '../lib/herramientas';
+import { descuento, slug } from '../lib/seo';
+import { listaOfertas } from '../lib/jsonld';
+import { mesActual } from '../lib/fechas';
 import { Image } from 'astro:assets';
 import retrato from '../assets/bali-1.jpg';
 
 export const prerender = false;
 
-const [cupones, posts] = await Promise.all([getCupones(), getPosts(4)]);
+const [cupones, posts, opiniones] = await Promise.all([
+  getCupones(),
+  getPosts(4),
+  getOpiniones(3),
+]);
+
 const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
+/** Texto del sello que gira alrededor de la foto. Sin cifra si no la hay. */
+const sello = destacado
+  ? (() => {
+      const dto = descuento(destacado.valor, destacado.unidad);
+      const vuelta = `CÓDIGO ${destacado.codigo}${dto ? ` · ${dto}` : ''} · `;
+      return vuelta.repeat(2);
+    })()
+  : '';
+
+/** En la portada van los primeros; el resto están en /codigos/. */
+const primeros = cupones.slice(0, 4);
+const mes = mesActual();
+
+const esquema = cupones.length
+  ? [listaOfertas(Astro.site, primeros, (c) => `/codigos/${slug(c.marca)}/`)]
+  : [];
 ---
-<Base>
+<Base
+  titulo={`Códigos de descuento para perros y reseñas · ${mes}`}
+  descripcion={`Códigos de descuento comprobados para tiendas de perros, reseñas honestas de productos y calculadoras gratis. Todo de Bali, un caniche toy chocolate. Actualizado en ${mes}.`}
+  esquema={esquema}
+>
   <section class="hero">
     <div class="hero__aro">
-      <Image class="hero__foto" src={retrato}
+      <Image class="hero__foto" id="foto-bali" src={retrato}
         alt={`${perfil.nombre}, ${perfil.raza.toLowerCase()} color ${perfil.color.toLowerCase()}`}
         widths={[280, 560]} sizes="min(78vw, 300px)" />
       {destacado && (
@@ -25,9 +55,7 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
             <path id="aro" fill="none" d="M100,100 m-92,0 a92,92 0 1,1 184,0 a92,92 0 1,1 -184,0" />
           </defs>
           <text>
-            <textPath href="#aro" startOffset="0">
-              {`CÓDIGO ${destacado.codigo} · ${destacado.valor}${destacado.unidad} · CÓDIGO ${destacado.codigo} · ${destacado.valor}${destacado.unidad} · `}
-            </textPath>
+            <textPath href="#aro" startOffset="0">{sello}</textPath>
           </text>
         </svg>
       )}
@@ -40,6 +68,7 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
       <li>{perfil.color}</li>
       <li>{perfil.pais}</li>
     </ul>
+    <p class="hero__dato" id="dato-bali" hidden></p>
   </section>
 
   <section class="seccion">
@@ -48,16 +77,64 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
         <p class="eyebrow">Lo que has venido a buscar</p>
         <h2 class="display">CÓDIGOS</h2>
       </div>
-      <span class="seccion__meta">{cupones.length} activos</span>
+      <a class="seccion__meta" href="/codigos/">
+        {cupones.length > primeros.length ? `Ver los ${cupones.length} →` : 'Ver todos →'}
+      </a>
     </div>
     {cupones.length === 0 ? (
       <p class="vacio">Ahora mismo no hay ningún código activo.</p>
     ) : (
-      <div class="lista">{cupones.map((c) => <TicketCodigo {...c} />)}</div>
+      <div class="lista">{primeros.map((c) => <TicketCodigo {...c} />)}</div>
     )}
   </section>
 
   <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Gratis y sin registro</p>
+        <h2 class="display">CALCULADORAS</h2>
+      </div>
+      <a class="seccion__meta" href="/herramientas/">Ver todas →</a>
+    </div>
+    <ul class="herr">
+      {HERRAMIENTAS.map((h) => (
+        <li>
+          <a href={h.ruta}>
+            <span class="herr__emoji">{h.emoji}</span>
+            <span>{h.corto}<span class="herr__sub">{h.busqueda}</span></span>
+            <span class="herr__ir">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  {opiniones.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Probado por Bali</p>
+          <h2 class="display">OPINIONES</h2>
+        </div>
+        <a class="seccion__meta" href="/opiniones/">Ver todas →</a>
+      </div>
+      <ul class="ops">
+        {opiniones.map((o) => (
+          <li>
+            <a href="/opiniones/">
+              <span class="ops__alto">
+                <span class="ops__producto">{o.producto}</span>
+                <Estrellas nota={o.nota} tamano={14} />
+              </span>
+              <span class="ops__texto">{o.texto}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 
   <section class="seccion">
     <div class="seccion__head">
@@ -103,7 +180,14 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
   .hero__aro{position:relative;width:min(78vw,300px);margin:0 auto}
   .hero__aro::before{content:"";display:block;padding-top:100%}
   .hero__foto{position:absolute;inset:9%;border-radius:50%;width:82%;height:82%;object-fit:cover;
-    object-position:50% 16%;box-shadow:0 0 0 5px var(--bg),0 0 0 8px var(--pink),0 26px 50px -20px #000}
+    object-position:50% 16%;box-shadow:0 0 0 5px var(--bg),0 0 0 8px var(--pink),0 26px 50px -20px #000;
+    cursor:pointer}
+  .hero__foto.salta{animation:salta .5s ease}
+  @keyframes salta{
+    0%,100%{transform:translateY(0) rotate(0)}
+    25%{transform:translateY(-8px) rotate(-4deg)}
+    75%{transform:translateY(-4px) rotate(4deg)}
+  }
   .hero__sello{position:absolute;inset:0;animation:gira 22s linear infinite}
   .hero__sello text{font-family:"Space Mono",monospace;font-size:11.2px;letter-spacing:.13em;
     fill:var(--tang);text-transform:uppercase}
@@ -116,9 +200,28 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
   .hero__chips li{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
     text-transform:uppercase;border:1px solid rgba(255,243,233,.24);border-radius:100px;
     padding:6px 12px;color:var(--cream-dim)}
+  .hero__dato{max-width:40ch;margin:20px auto 0;font-size:14px;color:var(--mint);
+    background:var(--card);border-radius:12px;padding:13px 16px;text-align:left}
+  .hero__dato[hidden]{display:none}
 
   .lista{display:flex;flex-direction:column;gap:14px}
   .vacio{color:var(--cream-dim)}
+
+  .herr{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .herr a{display:flex;align-items:center;gap:14px;padding:15px 17px;background:var(--card);
+    border-radius:14px;text-decoration:none;font-weight:600;transition:background .16s,transform .16s}
+  .herr a:hover{background:var(--card-2);transform:translateX(3px)}
+  .herr__emoji{font-size:20px;width:24px;text-align:center}
+  .herr__sub{display:block;font-weight:400;font-size:12.5px;color:var(--cream-dim)}
+  .herr__ir{margin-left:auto;color:var(--cream-dim)}
+
+  .ops{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .ops a{display:block;background:var(--card);border-radius:14px;padding:15px 17px;text-decoration:none}
+  .ops a:hover{background:var(--card-2)}
+  .ops__alto{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ops__producto{font-weight:600;font-size:15.5px}
+  .ops__texto{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    color:var(--cream-dim);font-size:14px;margin-top:6px}
 
   .redes{display:flex;flex-direction:column;gap:10px}
   .red{display:flex;align-items:center;gap:14px;padding:17px 18px;background:var(--card);
@@ -128,3 +231,36 @@ const destacado = cupones.find((c) => c.destacado) ?? cupones[0];
   .red__sub{display:block;font-weight:400;font-size:13px;color:var(--cream-dim)}
   .red__ir{margin-left:auto;color:var(--cream-dim)}
 </style>
+
+<script>
+  /**
+   * Tontería con premio: al tocar la foto, Bali salta, y al tercer toque
+   * suelta un dato. Quien llega de una story toca la foto igual; una web que
+   * responde se recuerda mejor que una que no hace nada.
+   */
+  const foto = document.getElementById('foto-bali');
+  const dato = document.getElementById('dato-bali');
+
+  const DATOS = [
+    'Los caniches fueron perros de caza en el agua. El corte de pompones no era estética: dejaba libres las articulaciones y abrigaba los órganos.',
+    'Un caniche toy adulto pesa entre 2 y 4 kilos y vive de 13 a 16 años. De las razas más longevas que hay.',
+    'El pelo del caniche no se muda, crece. Por eso hay que cortarlo cada dos meses y por eso hay quien lo tolera mejor.',
+    'Los perros distinguen el azul y el amarillo, pero no el rojo. Esa pelota roja sobre el césped, para él, es gris sobre gris.',
+    'El olfato de un perro es entre diez mil y cien mil veces más sensible que el nuestro. Un paseo corto oliendo cansa más que uno largo corriendo.',
+    'Los caniches están entre las tres razas más listas en las pruebas de obediencia: aprenden una orden nueva en menos de cinco repeticiones.',
+    'Bali es chocolate, un color que en caniche se aclara con los años. La nariz marrón es la pista para distinguirlo del negro.',
+  ];
+
+  let toques = 0;
+  foto?.addEventListener('click', () => {
+    toques++;
+    foto.classList.remove('salta');
+    void (foto as HTMLElement).offsetWidth; // Reinicia la animación.
+    foto.classList.add('salta');
+
+    if (toques >= 3 && dato) {
+      dato.textContent = DATOS[Math.floor(Math.random() * DATOS.length)];
+      dato.hidden = false;
+    }
+  });
+</script>
