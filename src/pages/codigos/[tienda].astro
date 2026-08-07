@@ -5,7 +5,7 @@ import TarjetaPost from '../../components/TarjetaPost.astro';
 import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
 import Faq from '../../components/Faq.astro';
 import { getTienda, getPosts } from '../../lib/contenido';
-import { faqTienda, slug } from '../../lib/seo';
+import { descuento, faqTienda, slug } from '../../lib/seo';
 import { tiendaConOfertas, faq } from '../../lib/jsonld';
 import { mesActual } from '../../lib/fechas';
 
@@ -21,15 +21,21 @@ const tienda = await getTienda(Astro.params.tienda!);
 if (!tienda) return new Response(null, { status: 404, statusText: 'Tienda no encontrada' });
 
 const mejor = tienda.mejor;
-const dto = mejor.unidad.includes('€') ? `${mejor.valor}€` : `${mejor.valor}%`;
+/** null cuando la tienda no dice cuánto descuenta: entonces el título va sin cifra. */
+const dto = descuento(mejor.valor, mejor.unidad);
+const cuantos = tienda.cupones.length;
 const mes = mesActual();
 
-const titulo = `Código descuento ${tienda.nombre}: ${dto} · ${mes}`;
+const titulo = dto
+  ? `Código descuento ${tienda.nombre}: ${dto} · ${mes}`
+  : `Código descuento ${tienda.nombre} · ${mes}`;
 const descripcion =
-  `${tienda.cupones.length} ${tienda.cupones.length === 1 ? 'cupón' : 'cupones'} de descuento de ` +
-  `${tienda.nombre} comprobados en ${mes}. El mejor, ${dto} de descuento. Copia el código y aplícalo en tu pedido.`;
+  `${cuantos} ${cuantos === 1 ? 'cupón' : 'cupones'} de descuento de ` +
+  `${tienda.nombre} comprobados en ${mes}. ` +
+  (dto ? `El mejor, ${dto} de descuento. ` : '') +
+  'Copia el código y aplícalo en tu pedido.';
 
-const preguntas = faqTienda(tienda.nombre, mejor.valor, mejor.unidad, tienda.cupones.length);
+const preguntas = faqTienda(tienda.nombre, dto, cuantos);
 
 /** Entradas del blog que hablan de esta tienda: enlaces internos que ayudan a las dos páginas. */
 const posts = await getPosts();
@@ -55,9 +61,9 @@ const esquema = [tiendaConOfertas(Astro.site, tienda), faq(preguntas)];
     <p class="eyebrow">Cupones verificados · {mes}</p>
     <h1 class="display">CÓDIGO DESCUENTO<br /><em>{tienda.nombre}</em></h1>
     <p class="entradilla">
-      {tienda.cupones.length === 1
-        ? `Hay 1 código de descuento activo de ${tienda.nombre}: ${dto} de descuento.`
-        : `Hay ${tienda.cupones.length} códigos de descuento activos de ${tienda.nombre}. El mejor es de ${dto}.`}
+      {cuantos === 1
+        ? `Hay 1 código de descuento activo de ${tienda.nombre}${dto ? `: ${dto} de descuento.` : '.'}`
+        : `Hay ${cuantos} códigos de descuento activos de ${tienda.nombre}.${dto ? ` El mejor es de ${dto}.` : ''}`}
       {' '}Los compruebo a mano cada semana, así que si sale aquí es que funciona hoy.
       Tócalo para copiarlo y pégalo en el carrito antes de pagar.
     </p>

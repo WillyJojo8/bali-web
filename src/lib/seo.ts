@@ -83,6 +83,20 @@ export function categoria(id: string | null | undefined): Categoria {
 }
 
 /**
+ * "15" + "% dto" → "15%". Sin valor devuelve null.
+ *
+ * No todas las tiendas dicen cuánto descuenta el código, así que el valor es
+ * opcional. Cuando falta, las páginas se quedan sin la cifra en vez de
+ * enseñar "undefined%" — y sobre todo, el JSON-LD no la inventa: marcar un
+ * descuento que no está escrito en la página es motivo de penalización.
+ */
+export function descuento(valor?: string | null, unidad?: string | null): string | null {
+  const v = String(valor ?? '').trim();
+  if (!v) return null;
+  return String(unidad ?? '').includes('€') ? `${v}€` : `${v}%`;
+}
+
+/**
  * Preguntas frecuentes de la página de códigos.
  *
  * Salen en la página Y en el JSON-LD de tipo FAQPage. Google puede
@@ -97,12 +111,13 @@ export function categoria(id: string | null | undefined): Categoria {
  * repitieran el mismo texto, Google trataría las páginas como duplicadas y
  * dejaría de indexarlas.
  */
-export function faqTienda(tienda: string, valor: string, unidad: string, cuantos: number) {
-  const dto = unidad.includes('€') ? `${valor}€` : `${valor}%`;
+export function faqTienda(tienda: string, dto: string | null, cuantos: number) {
   return [
     {
       p: `¿Cuál es el mejor código de descuento de ${tienda}?`,
-      r: `Ahora mismo el mejor es de ${dto}. Está el primero de esta página, con la fecha en la que se comprobó por última vez que funciona.`,
+      r: dto
+        ? `Ahora mismo el mejor es de ${dto}. Está el primero de esta página, con la fecha en la que se comprobó por última vez que funciona.`
+        : `El primero de esta página, con la fecha en la que se comprobó por última vez que funciona. ${tienda} no publica cuánto descuenta: lo verás en el resumen del pedido al aplicarlo.`,
     },
     {
       p: `¿Cómo aplico un cupón de ${tienda}?`,

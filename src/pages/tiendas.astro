@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getTiendas } from '../lib/contenido';
-import { categoria } from '../lib/seo';
+import { categoria, descuento } from '../lib/seo';
 import { mesActual } from '../lib/fechas';
 
 export const prerender = false;
@@ -50,11 +50,11 @@ const esquema = [
       <ul class="rejilla">
         {tiendas.map((t) => {
           const cat = categoria(t.mejor.categoria);
-          const dto = t.mejor.unidad.includes('€') ? `${t.mejor.valor}€` : `${t.mejor.valor}%`;
+          const dto = descuento(t.mejor.valor, t.mejor.unidad);
           return (
             <li>
               <a href={`/codigos/${t.slug}/`}>
-                <span class="dto">{dto}</span>
+                <span class:list={['dto', { 'dto--corto': !dto }]}>{dto ?? 'DTO'}</span>
                 <span class="nombre">{t.nombre}</span>
                 <span class="sub">{cat.emoji} {cat.nombre} · {t.cupones.length} {t.cupones.length === 1 ? 'código' : 'códigos'}</span>
               </a>
@@ -81,6 +81,7 @@ const esquema = [
   .rejilla a:hover{background:var(--card-2);transform:translateY(-2px)}
   .dto{font-family:"Anybody","Arial Black",sans-serif;font-variation-settings:"wdth" 120;
     font-weight:900;font-size:26px;letter-spacing:-.03em;color:var(--tang);line-height:1}
+  .dto--corto{font-size:20px;letter-spacing:.02em}
   .nombre{font-weight:600;font-size:15.5px;margin-top:4px}
   .sub{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.08em;
     text-transform:uppercase;color:var(--cream-dim)}

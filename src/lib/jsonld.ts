@@ -11,7 +11,7 @@
  * página. Marcar cosas que el usuario no ve es motivo de penalización.
  */
 import type { Cupon, Post, Opinion, Tienda } from './contenido';
-import { categoria } from './seo';
+import { categoria, descuento } from './seo';
 
 type Nodo = Record<string, unknown>;
 
@@ -69,10 +69,10 @@ export function migas(base: URL | undefined, items: { nombre: string; url: strin
  * schema.org define para descuentos.
  */
 export function oferta(base: URL | undefined, c: Cupon, urlTienda: string): Nodo {
-  const esPorcentaje = !c.unidad.includes('€');
+  const dto = descuento(c.valor, c.unidad);
   const nodo: Nodo = {
     '@type': 'Offer',
-    name: `${c.valor}${esPorcentaje ? '%' : '€'} de descuento en ${c.marca}`,
+    name: dto ? `${dto} de descuento en ${c.marca}` : `Código de descuento en ${c.marca}`,
     description: c.que ?? `Código de descuento para ${c.marca}`,
     url: abs(base, urlTienda),
     availability: 'https://schema.org/InStock',
@@ -83,8 +83,8 @@ export function oferta(base: URL | undefined, c: Cupon, urlTienda: string): Nodo
       priceCurrency: 'EUR',
     },
   };
-  if (esPorcentaje) nodo.discount = `${c.valor}%`;
-  else nodo.discount = c.valor;
+  // Sin valor no hay `discount`: no se marca lo que no está escrito en la página.
+  if (dto) nodo.discount = dto;
   if (c.caduca) nodo.validThrough = c.caduca;
   if (c.verificado_en) nodo.validFrom = c.verificado_en;
   return nodo;

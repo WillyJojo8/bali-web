@@ -1,11 +1,12 @@
 ---
-import { categoria as buscaCategoria, slug } from '../lib/seo';
+import { categoria as buscaCategoria, descuento, slug } from '../lib/seo';
 import { textoCaducidad, textoVerificado } from '../lib/fechas';
 
 interface Props {
   marca: string;
-  valor: string;
-  unidad: string;
+  /** Opcional: hay tiendas que no dicen cuánto descuenta el código. */
+  valor?: string | null;
+  unidad?: string | null;
   codigo: string;
   que?: string | null;
   url?: string | null;
@@ -23,6 +24,8 @@ const {
 } = Astro.props;
 
 const cat = buscaCategoria(categoria);
+/** Sin descuento conocido el talón sigue siendo un talón, pero sin cifra. */
+const dto = descuento(valor, unidad);
 const caducidad = textoCaducidad(caduca);
 const verificado = textoVerificado(verificado_en);
 const urlTienda = `/codigos/${slug(marca)}/`;
@@ -38,8 +41,17 @@ const busqueda = [marca, que, codigo, cat.nombre, cat.gancho].filter(Boolean).jo
   data-url={url ?? ''}
 >
   <div class="ticket__talon">
-    <span class="ticket__valor">{valor}</span>
-    <span class="ticket__unidad">{unidad}</span>
+    {dto ? (
+      <>
+        <span class="ticket__valor">{valor}</span>
+        <span class="ticket__unidad">{unidad}</span>
+      </>
+    ) : (
+      <>
+        <span class="ticket__valor ticket__valor--corto">DTO</span>
+        <span class="ticket__unidad">Código Bali</span>
+      </>
+    )}
   </div>
 
   <div class="ticket__cuerpo">
@@ -85,6 +97,7 @@ const busqueda = [marca, que, codigo, cat.nombre, cat.gancho].filter(Boolean).jo
     background-image:linear-gradient(var(--bg) 50%,transparent 0);background-size:2px 11px}
   .ticket__valor{font-family:"Anybody","Arial Black",sans-serif;font-variation-settings:"wdth" 120;
     font-weight:900;font-size:34px;line-height:.9;letter-spacing:-.03em}
+  .ticket__valor--corto{font-size:26px;letter-spacing:.02em}
   .ticket__unidad{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.14em;
     text-transform:uppercase;opacity:.85}
 
