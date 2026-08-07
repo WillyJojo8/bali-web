@@ -1,0 +1,141 @@
+---
+import Base from './Base.astro';
+import Faq from '../components/Faq.astro';
+import HuecoAnuncio from '../components/HuecoAnuncio.astro';
+import { HERRAMIENTAS } from '../lib/herramientas';
+import { faq as faqLd } from '../lib/jsonld';
+import { getCupones } from '../lib/contenido';
+import { slug } from '../lib/seo';
+
+/**
+ * Marco común de las calculadoras.
+ *
+ * Cada herramienta pone su formulario y su explicación; de las migas, las
+ * preguntas, los enlaces a las otras y el cupón del final se encarga esto.
+ * Así añadir una herramienta nueva es escribir la calculadora y nada más.
+ */
+interface Props {
+  /** Ruta tal cual está en lib/herramientas.ts. */
+  ruta: string;
+  titulo?: string;
+  descripcion?: string;
+  h1?: string;
+  entradilla?: string;
+  preguntas?: { p: string; r: string }[];
+  /** Categoría de cupón que pega con la herramienta, si hay alguna. */
+  cuponDe?: string;
+}
+
+const { ruta, titulo, descripcion, h1, entradilla, preguntas = [], cuponDe } = Astro.props;
+
+const yo = HERRAMIENTAS.find((h) => h.ruta === ruta)!;
+const otras = HERRAMIENTAS.filter((h) => h.ruta !== ruta);
+
+const cupones = await getCupones();
+const cupon = cuponDe
+  ? cupones.find((c) => (c.categoria ?? 'otros') === cuponDe) ?? null
+  : null;
+
+const esquema = [
+  {
+    '@type': 'WebApplication',
+    name: titulo ?? yo.titulo,
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Cualquiera con navegador',
+    description: descripcion ?? yo.descripcion,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+  },
+  ...(preguntas.length ? [faqLd(preguntas)] : []),
+];
+---
+<Base
+  titulo={titulo ?? yo.titulo}
+  descripcion={descripcion ?? yo.descripcion}
+  miga={[
+    { nombre: 'Herramientas', url: '/herramientas/' },
+    { nombre: yo.corto, url: yo.ruta },
+  ]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Calculadora gratis · sin registro</p>
+    <h1 class="display">{h1 ?? yo.titulo}</h1>
+    <p class="entradilla">{entradilla ?? yo.descripcion}</p>
+  </section>
+
+  <section class="seccion herramienta">
+    <slot />
+  </section>
+
+  <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_ARTICULO} />
+
+  <slot name="explicacion" />
+
+  <Faq preguntas={preguntas} gancho="Sobre esta calculadora" />
+
+  {cupon && (
+    <section class="seccion">
+      <aside class="cta">
+        <p class="cta__eyebrow">De paso</p>
+        <p class="cta__texto">
+          Si vas a comprar {cupon.que ? cupon.que.toLowerCase() : 'algo para tu perro'}, en
+          <strong> {cupon.marca}</strong> tienes <strong>{cupon.valor}{cupon.unidad.includes('€') ? '€' : '%'}</strong> de
+          descuento con el código <code>{cupon.codigo}</code>.
+        </p>
+        <a class="cta__boton" href={`/codigos/${slug(cupon.marca)}/`}>Ver el código →</a>
+      </aside>
+    </section>
+  )}
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Más calculadoras</p>
+        <h2 class="display">HERRAMIENTAS</h2>
+      </div>
+      <a class="seccion__meta" href="/herramientas/">Ver todas →</a>
+    </div>
+    <ul class="otras">
+      {otras.map((h) => (
+        <li>
+          <a href={h.ruta}>
+            <span class="otras__emoji">{h.emoji}</span>
+            <span>
+              {h.corto}
+              <span class="otras__sub">{h.busqueda}</span>
+            </span>
+            <span class="otras__ir">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(27px,7vw,44px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 0;max-width:58ch}
+  .herramienta{margin-top:34px}
+
+  .cta{background:linear-gradient(135deg,rgba(255,46,99,.14),rgba(255,159,28,.14));
+    border:1px solid rgba(255,159,28,.28);border-radius:var(--radio);padding:20px}
+  .cta__eyebrow{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--tang);margin:0 0 8px}
+  .cta__texto{margin:0;font-size:15.5px}
+  .cta__texto code{font-family:"Space Mono",monospace;background:var(--bg);padding:2px 7px;
+    border-radius:6px;color:var(--tang)}
+  .cta__boton{display:inline-block;margin-top:14px;background:var(--cream);color:var(--bg);
+    font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:700;text-decoration:none;padding:11px 16px;border-radius:10px}
+  .cta__boton:hover{background:var(--tang)}
+
+  .otras{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .otras a{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:14px;
+    padding:15px 17px;text-decoration:none;font-weight:600;transition:background .16s,transform .16s}
+  .otras a:hover{background:var(--card-2);transform:translateX(3px)}
+  .otras__emoji{font-size:20px}
+  .otras__sub{display:block;font-weight:400;font-size:12.5px;color:var(--cream-dim);
+    text-transform:none;letter-spacing:0}
+  .otras__ir{margin-left:auto;color:var(--cream-dim)}
+</style>

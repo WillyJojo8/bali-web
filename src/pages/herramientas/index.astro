@@ -1,0 +1,94 @@
+---
+import Base from '../../layouts/Base.astro';
+import { HERRAMIENTAS } from '../../lib/herramientas';
+
+export const prerender = false;
+
+/**
+ * Índice de calculadoras.
+ *
+ * Estas páginas son las que traen visitas de Google sin depender de publicar
+ * nada nuevo: quien busca "cuánta comida darle a mi perro" busca lo mismo
+ * hoy que dentro de dos años. Y quien llega por ahí acaba viendo los cupones.
+ */
+const esquema = [
+  {
+    '@type': 'ItemList',
+    name: 'Calculadoras para perros',
+    numberOfItems: HERRAMIENTAS.length,
+    itemListElement: HERRAMIENTAS.map((h, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: h.titulo,
+      url: new URL(h.ruta, Astro.site ?? 'https://bali.example.com').toString(),
+    })),
+  },
+];
+---
+<Base
+  titulo="Herramientas y calculadoras para perros"
+  descripcion="Calculadoras gratis para perros: ración diaria de pienso, edad en años humanos, talla de arnés y riesgo por chocolate. Sin registro y sin instalar nada."
+  miga={[{ nombre: 'Herramientas', url: '/herramientas/' }]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Gratis · sin registro · en el móvil</p>
+    <h1 class="display">CALCULADORAS PARA PERROS</h1>
+    <p class="entradilla">
+      Las cuentas que hace falta echar de vez en cuando y nunca recuerdas:
+      cuánto pienso le toca, qué edad tiene en años humanos, qué talla de arnés
+      pedir y si ese trozo de chocolate es un problema. Todas funcionan al
+      momento, sin enviar nada a ningún sitio.
+    </p>
+  </section>
+
+  <section class="seccion">
+    <ul class="rejilla">
+      {HERRAMIENTAS.map((h) => (
+        <li>
+          <a href={h.ruta}>
+            <span class="emoji">{h.emoji}</span>
+            <h2>{h.corto}</h2>
+            <p>{h.descripcion}</p>
+            <span class="busqueda">«{h.busqueda}»</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Y de paso</p>
+        <h2 class="display">AHORRA</h2>
+      </div>
+    </div>
+    <p class="cierre">
+      Si has venido a calcular la ración, lo siguiente que vas a hacer es
+      comprar el pienso. Mira antes <a href="/codigos/">los códigos de descuento
+      para tiendas de perros</a>: son de tiendas que Bali ha probado, y están
+      comprobados uno a uno.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(30px,7.6vw,50px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 0;max-width:58ch}
+
+  .rejilla{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .rejilla a{display:block;background:var(--card);border-radius:var(--radio);padding:20px;
+    text-decoration:none;height:100%;transition:background .16s,transform .16s}
+  .rejilla a:hover{background:var(--card-2);transform:translateY(-2px)}
+  .emoji{font-size:28px;display:block}
+  .rejilla h2{font-size:19px;font-weight:700;margin:12px 0 8px}
+  .rejilla p{font-size:14px;color:var(--cream-dim);margin:0 0 14px}
+  .busqueda{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+    color:var(--tang)}
+
+  .cierre{color:var(--cream-dim);font-size:16px;margin:0;max-width:56ch}
+  .cierre a{color:var(--tang);text-underline-offset:3px}
+</style>

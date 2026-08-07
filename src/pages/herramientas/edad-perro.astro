@@ -1,0 +1,196 @@
+---
+import Herramienta from '../../layouts/Herramienta.astro';
+import { mesActual } from '../../lib/fechas';
+
+export const prerender = false;
+
+const preguntas = [
+  {
+    p: '¿Un año de perro son siete años humanos?',
+    r: 'No, y por bastante. El primer año de un perro equivale a unos quince humanos, el segundo a unos nueve más, y a partir de ahí cada año suma entre cuatro y siete según el tamaño. Lo de multiplicar por siete es una regla de los años cincuenta que nunca fue exacta.',
+  },
+  {
+    p: '¿Por qué influye el tamaño del perro?',
+    r: 'Los perros grandes envejecen más rápido: un gran danés de ocho años es un anciano y un caniche toy de ocho está en plena madurez. Es de los pocos casos en la naturaleza en que dentro de una misma especie los grandes viven menos.',
+  },
+  {
+    p: '¿Cuándo se considera senior a un perro?',
+    r: 'Alrededor de los siete años en razas pequeñas, de los seis en medianas y de los cinco en gigantes. No es una fecha en el calendario: es cuando conviene pasar a revisiones veterinarias cada seis meses y vigilar peso y articulaciones.',
+  },
+  {
+    p: '¿Cuánto vive un caniche toy?',
+    r: 'Entre trece y dieciséis años, y no es raro que pasen de los diecisiete. Es de las razas más longevas que hay, siempre que se le controle el peso y la boca — los dientes son su punto débil.',
+  },
+];
+
+const mes = mesActual();
+---
+<Herramienta
+  ruta="/herramientas/edad-perro/"
+  titulo={`Calculadora de edad de perro a humano · ${mes}`}
+  descripcion="Calcula la edad de tu perro en años humanos según su tamaño y su edad real. La regla de multiplicar por siete está mal: un perro pequeño y uno gigante no envejecen igual."
+  h1="¿CUÁNTOS AÑOS HUMANOS TIENE TU PERRO?"
+  entradilla="Lo de multiplicar por siete es mentira desde hace décadas. Un perro llega a los quince años humanos en su primer cumpleaños, y a partir de ahí el ritmo depende de lo que pese. Pon los datos y sal de dudas."
+  preguntas={preguntas}
+>
+  <form class="calc" id="calc">
+    <div class="calc__fila">
+      <label>
+        Edad del perro
+        <input type="number" id="anios" min="0" max="25" step="0.5" value="3" inputmode="decimal" />
+        <small>En años. Vale poner 0,5 para seis meses.</small>
+      </label>
+      <label>
+        Tamaño
+        <select id="tamano">
+          <option value="pequeno" selected>Pequeño — hasta 10 kg</option>
+          <option value="mediano">Mediano — de 10 a 25 kg</option>
+          <option value="grande">Grande — de 25 a 45 kg</option>
+          <option value="gigante">Gigante — más de 45 kg</option>
+        </select>
+        <small>Si dudas, mira lo que pesa de adulto.</small>
+      </label>
+    </div>
+  </form>
+
+  <div class="resultado" id="resultado">
+    <p class="resultado__grande" id="humanos">—</p>
+    <p class="resultado__sub" id="etapa"></p>
+    <ul class="resultado__detalle">
+      <li><span>Etapa vital</span><b id="fase">—</b></li>
+      <li><span>Esperanza de vida de su tamaño</span><b id="espera">—</b></li>
+      <li><span>Le quedarían, de media</span><b id="quedan">—</b></li>
+    </ul>
+    <p class="resultado__sub" id="consejo"></p>
+  </div>
+
+  <div slot="explicacion">
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">De dónde sale el número</p>
+          <h2 class="display">CÓMO SE CALCULA</h2>
+        </div>
+      </div>
+      <div class="prosa">
+        <p>
+          La cuenta que usa esta calculadora es la que manejan los veterinarios y
+          la American Veterinary Medical Association:
+        </p>
+        <ul>
+          <li><strong>Primer año:</strong> equivale a unos 15 años humanos. Un cachorro de doce meses ya es un adolescente hecho y derecho.</li>
+          <li><strong>Segundo año:</strong> suma unos 9 más. A los dos años, el perro anda por los 24 humanos.</li>
+          <li><strong>A partir del tercero:</strong> cada año suma entre 4 y 7 humanos, según el tamaño. Cuanto más grande, más rápido.</li>
+        </ul>
+        <p>
+          Existe además una fórmula publicada en 2020 a partir de la metilación
+          del ADN — 16 × ln(edad) + 31 — que da resultados parecidos en la edad
+          adulta pero se dispara en los cachorros. Aquí usamos la tabla por
+          tamaños porque se acerca más a lo que se ve en la consulta.
+        </p>
+        <p>
+          <strong>Bali, para que te sitúes:</strong> caniche toy, tamaño pequeño.
+          A los siete años estaría en unos 44 humanos — con canas en el hocico y
+          la misma energía que a los dos.
+        </p>
+      </div>
+    </section>
+  </div>
+</Herramienta>
+
+<style>
+  .prosa{color:var(--cream-dim);font-size:15.5px}
+  .prosa p{margin:0 0 16px}
+  .prosa strong{color:var(--cream)}
+  .prosa ul{margin:0 0 16px;padding-left:20px}
+  .prosa li{margin-bottom:8px}
+</style>
+
+<script>
+  /**
+   * Tabla de la AVMA: 15 humanos el primer año, 9 el segundo, y a partir de
+   * ahí lo que sume cada tamaño. La esperanza de vida es la media de la raza
+   * típica de ese peso.
+   */
+  const RITMO = {
+    pequeno: { porAnio: 4, vive: 15, nombre: 'pequeño' },
+    mediano: { porAnio: 5, vive: 13, nombre: 'mediano' },
+    grande: { porAnio: 6, vive: 11, nombre: 'grande' },
+    gigante: { porAnio: 7, vive: 9, nombre: 'gigante' },
+  } as const;
+
+  type Tamano = keyof typeof RITMO;
+
+  function aHumanos(anios: number, tamano: Tamano): number {
+    if (anios <= 0) return 0;
+    if (anios <= 1) return Math.round(anios * 15);
+    if (anios <= 2) return Math.round(15 + (anios - 1) * 9);
+    return Math.round(24 + (anios - 2) * RITMO[tamano].porAnio);
+  }
+
+  function fase(anios: number, tamano: Tamano): { texto: string; consejo: string } {
+    const vive = RITMO[tamano].vive;
+    const senior = vive * 0.55;
+    if (anios < 0.6) {
+      return {
+        texto: 'Cachorro',
+        consejo: 'Todo lo que conozca ahora le marcará de adulto: gente, ruidos, otros perros, el coche. La socialización de estos meses no se recupera después.',
+      };
+    }
+    if (anios < 1.5) {
+      return {
+        texto: 'Adolescente',
+        consejo: 'La peor edad y la más normal: se le olvida lo aprendido y prueba límites. No es que haya salido mal, es que tiene quince años humanos.',
+      };
+    }
+    if (anios < senior) {
+      return {
+        texto: 'Adulto',
+        consejo: 'Su mejor momento. Una revisión al año, control del peso y dientes limpios es casi todo lo que necesita.',
+      };
+    }
+    if (anios < vive) {
+      return {
+        texto: 'Senior',
+        consejo: 'Toca revisión cada seis meses, analítica anual y vigilar si le cuesta subir al sofá. Menos calorías y las mismas ganas de pasear.',
+      };
+    }
+    return {
+      texto: 'Geriátrico',
+      consejo: 'Ha superado la media de su tamaño. Camas blandas, suelos que no resbalen y paseos cortos y frecuentes en vez de uno largo.',
+    };
+  }
+
+  const $anios = document.getElementById('anios') as HTMLInputElement;
+  const $tamano = document.getElementById('tamano') as HTMLSelectElement;
+  const $humanos = document.getElementById('humanos')!;
+  const $etapa = document.getElementById('etapa')!;
+  const $fase = document.getElementById('fase')!;
+  const $espera = document.getElementById('espera')!;
+  const $quedan = document.getElementById('quedan')!;
+  const $consejo = document.getElementById('consejo')!;
+  const $resultado = document.getElementById('resultado')!;
+
+  function calcular(): void {
+    const anios = parseFloat($anios.value);
+    const tamano = $tamano.value as Tamano;
+    if (!Number.isFinite(anios) || anios < 0) return;
+
+    const humanos = aHumanos(anios, tamano);
+    const info = fase(anios, tamano);
+    const vive = RITMO[tamano].vive;
+    const restan = Math.max(0, Math.round((vive - anios) * 10) / 10);
+
+    $humanos.textContent = `${humanos} años humanos`;
+    $etapa.textContent = `Tu perro ${tamano === 'pequeno' ? 'pequeño' : RITMO[tamano].nombre} de ${anios} ${anios === 1 ? 'año' : 'años'} está, en edad humana, por los ${humanos}.`;
+    $fase.textContent = info.texto;
+    $espera.textContent = `${vive} años`;
+    $quedan.textContent = restan > 0 ? `${restan} años` : 'Ya va de propina';
+    $consejo.textContent = info.consejo;
+    $resultado.className = `resultado ${anios >= vive ? 'nivel--ojo' : 'nivel--ok'}`;
+  }
+
+  $anios.addEventListener('input', calcular);
+  $tamano.addEventListener('change', calcular);
+  calcular();
+</script>

@@ -53,6 +53,44 @@ a{color:inherit}
   padding:12px 16px;font-size:14px;color:var(--cream-dim);margin:0 0 28px;
 }
 
+/* ----------------------------------------------------------
+   Calculadoras
+   Todas las herramientas usan los mismos campos y la misma
+   caja de resultado, así que el estilo vive aquí una vez.
+   16px en los campos a propósito: con menos, iOS hace zoom
+   al enfocarlos y descoloca la página.
+   ---------------------------------------------------------- */
+.calc{background:var(--card);border-radius:var(--radio);padding:20px;display:grid;gap:16px}
+.calc__fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.calc label{display:grid;gap:6px;font-size:14px;font-weight:600}
+.calc small{font-weight:400;font-size:12.5px;color:var(--cream-dim)}
+.calc input,.calc select{
+  font-family:inherit;font-size:16px;padding:12px 14px;border-radius:11px;
+  background:var(--bg-2);border:1px solid var(--linea);color:var(--cream);width:100%;
+}
+.calc input:focus,.calc select:focus{border-color:var(--tang);outline:none}
+.calc select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--tang) 50%),
+  linear-gradient(135deg,var(--tang) 50%,transparent 50%);
+  background-position:calc(100% - 19px) 51%,calc(100% - 14px) 51%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:38px}
+
+.resultado{background:var(--bg-2);border-radius:var(--radio);padding:22px;margin-top:16px;
+  border-left:4px solid var(--tang)}
+.resultado[hidden]{display:none}
+.resultado__grande{font-family:"Anybody","Arial Black",sans-serif;font-variation-settings:"wdth" 120;
+  font-weight:900;font-size:clamp(30px,8vw,44px);line-height:1;letter-spacing:-.03em;margin:0}
+.resultado__sub{color:var(--cream-dim);font-size:14.5px;margin:10px 0 0}
+.resultado__detalle{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:8px;font-size:14.5px}
+.resultado__detalle li{display:flex;justify-content:space-between;gap:14px;
+  border-top:1px solid var(--linea);padding-top:8px}
+.resultado__detalle b{font-weight:600;text-align:right}
+
+.nivel--ok{border-left-color:var(--mint)}
+.nivel--ojo{border-left-color:var(--tang)}
+.nivel--mal{border-left-color:var(--pink)}
+
+.nota-legal{font-size:13px;color:var(--cream-dim);margin:18px 0 0}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }

@@ -1,0 +1,191 @@
+---
+import Herramienta from '../../layouts/Herramienta.astro';
+import { mesActual } from '../../lib/fechas';
+
+export const prerender = false;
+
+const preguntas = [
+  {
+    p: '¿Cuánta comida tengo que dar a mi perro al día?',
+    r: 'Depende del peso, la edad y lo que se mueva, no del tamaño del cuenco. La cuenta que usan los veterinarios parte de las calorías que quema en reposo y le aplica un multiplicador según su situación. Esta calculadora hace esa cuenta y la traduce a gramos de tu pienso.',
+  },
+  {
+    p: '¿Por qué no me fío de la tabla del saco?',
+    r: 'Las tablas del fabricante suelen ir por rangos de peso muy amplios y tienden a quedarse largas. Además no distinguen entre un perro esterilizado que duerme todo el día y uno que corre dos horas. Úsalas como punto de partida y ajusta con la báscula.',
+  },
+  {
+    p: '¿Cuántas veces al día debe comer?',
+    r: 'Los cachorros de menos de cuatro meses, tres o cuatro tomas. De cuatro meses a un año, dos o tres. Los adultos, dos: repartir la ración evita el hambre y, en razas grandes, reduce el riesgo de torsión gástrica.',
+  },
+  {
+    p: '¿Cómo sé si mi perro está en su peso?',
+    r: 'Con las manos, no con la báscula: deberías notarle las costillas al pasar la palma sin apretar, verle cintura desde arriba y una curva hacia arriba en la tripa vista de lado. Si tienes que hundir el dedo para encontrar las costillas, le sobra peso.',
+  },
+  {
+    p: '¿Los premios cuentan?',
+    r: 'Cuentan, y mucho más de lo que parece. No deberían pasar del 10% de las calorías del día. En un caniche toy eso son literalmente dos o tres premios pequeños: por eso engordan sin que el dueño entienda por qué.',
+  },
+];
+
+const mes = mesActual();
+---
+<Herramienta
+  ruta="/herramientas/racion-diaria/"
+  titulo={`Calculadora de ración diaria de pienso para perros · ${mes}`}
+  descripcion="Cuántos gramos de pienso al día necesita tu perro según su peso, su edad y su actividad. Con la fórmula veterinaria de calorías, no con la tabla del saco."
+  h1="¿CUÁNTA COMIDA DARLE A TU PERRO AL DÍA?"
+  entradilla="Pon el peso, la etapa vital y las calorías que trae tu pienso, y te decimos los gramos exactos del día y por toma. La cuenta es la que usan en la consulta: energía en reposo por el factor que le toque."
+  preguntas={preguntas}
+  cuponDe="comida"
+>
+  <form class="calc" id="calc">
+    <div class="calc__fila">
+      <label>
+        Peso del perro
+        <input type="number" id="peso" min="0.5" max="90" step="0.1" value="4" inputmode="decimal" />
+        <small>En kilos. Si le sobra peso, pon el peso ideal.</small>
+      </label>
+      <label>
+        Situación
+        <select id="factor">
+          <option value="3">Cachorro de menos de 4 meses</option>
+          <option value="2">Cachorro de 4 a 12 meses</option>
+          <option value="1.6" selected>Adulto esterilizado</option>
+          <option value="1.8">Adulto sin esterilizar</option>
+          <option value="1.4">Senior o poco activo</option>
+          <option value="2.5">Muy activo o de trabajo</option>
+          <option value="1">Tiene que adelgazar</option>
+          <option value="2.2">Tiene que engordar</option>
+        </select>
+        <small>El multiplicador de la fórmula veterinaria.</small>
+      </label>
+    </div>
+    <div class="calc__fila">
+      <label>
+        Calorías del pienso
+        <input type="number" id="kcal" min="200" max="600" step="5" value="360" inputmode="numeric" />
+        <small>kcal por cada 100 g. Viene en el saco como «EM».</small>
+      </label>
+      <label>
+        Tomas al día
+        <select id="tomas">
+          <option value="1">1 toma</option>
+          <option value="2" selected>2 tomas</option>
+          <option value="3">3 tomas</option>
+          <option value="4">4 tomas</option>
+        </select>
+        <small>Repartir la ración le sienta mejor.</small>
+      </label>
+    </div>
+  </form>
+
+  <div class="resultado" id="resultado">
+    <p class="resultado__grande" id="gramos">—</p>
+    <p class="resultado__sub" id="porToma"></p>
+    <ul class="resultado__detalle">
+      <li><span>Energía en reposo (RER)</span><b id="rer">—</b></li>
+      <li><span>Necesidad diaria (MER)</span><b id="mer">—</b></li>
+      <li><span>Máximo en premios (10%)</span><b id="premios">—</b></li>
+      <li><span>Dura un saco de 3 kg</span><b id="saco">—</b></li>
+    </ul>
+    <p class="resultado__sub" id="aviso"></p>
+  </div>
+
+  <div slot="explicacion">
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">La cuenta, sin misterio</p>
+          <h2 class="display">CÓMO SE CALCULA</h2>
+        </div>
+      </div>
+      <div class="prosa">
+        <p>
+          Se hace en dos pasos. Primero la <strong>energía en reposo</strong>, lo
+          que quema el perro sin hacer nada:
+        </p>
+        <p class="formula">RER = 70 × (peso en kg) <sup>0,75</sup></p>
+        <p>
+          El exponente 0,75 no es un capricho: la energía no crece igual que el
+          peso. Un perro de 40 kg no necesita diez veces lo de uno de 4, necesita
+          unas cinco veces y media.
+        </p>
+        <p>
+          Después se multiplica por el factor de su situación para obtener la
+          <strong>necesidad diaria</strong> (MER): 1,6 en un adulto esterilizado,
+          2 en un cachorro mayor de cuatro meses, 1 si tiene que adelgazar. Y esas
+          calorías se pasan a gramos con las que trae tu pienso.
+        </p>
+        <p>
+          <strong>Ojo con el pienso:</strong> uno de 300 kcal/100 g y otro de 420
+          no se dan en la misma cantidad, y la diferencia es casi un 40%. Es el
+          motivo más frecuente de que un perro engorde al cambiar de marca sin
+          tocar el cacito.
+        </p>
+        <p class="nota-legal">
+          Esto es una estimación para orientarte, no una pauta veterinaria. Si tu
+          perro tiene una enfermedad, está preñado o le has visto cambiar de peso
+          sin motivo, la ración la pone tu veterinario.
+        </p>
+      </div>
+    </section>
+  </div>
+</Herramienta>
+
+<style>
+  .prosa{color:var(--cream-dim);font-size:15.5px}
+  .prosa p{margin:0 0 16px}
+  .prosa strong{color:var(--cream)}
+  .formula{font-family:"Space Mono",monospace;background:var(--card);border-radius:10px;
+    padding:14px 16px;color:var(--tang);font-size:15px}
+</style>
+
+<script>
+  /**
+   * RER = 70 × peso^0,75 — la fórmula estándar de energía en reposo.
+   * MER = RER × factor. De ahí a gramos con las kcal del pienso.
+   */
+  const $peso = document.getElementById('peso') as HTMLInputElement;
+  const $factor = document.getElementById('factor') as HTMLSelectElement;
+  const $kcal = document.getElementById('kcal') as HTMLInputElement;
+  const $tomas = document.getElementById('tomas') as HTMLSelectElement;
+
+  const $gramos = document.getElementById('gramos')!;
+  const $porToma = document.getElementById('porToma')!;
+  const $rer = document.getElementById('rer')!;
+  const $mer = document.getElementById('mer')!;
+  const $premios = document.getElementById('premios')!;
+  const $saco = document.getElementById('saco')!;
+  const $aviso = document.getElementById('aviso')!;
+  const $resultado = document.getElementById('resultado')!;
+
+  function calcular(): void {
+    const peso = parseFloat($peso.value);
+    const factor = parseFloat($factor.value);
+    const kcal100 = parseFloat($kcal.value);
+    const tomas = parseInt($tomas.value, 10);
+    if (!Number.isFinite(peso) || peso <= 0 || !Number.isFinite(kcal100) || kcal100 <= 0) return;
+
+    const rer = 70 * Math.pow(peso, 0.75);
+    const mer = rer * factor;
+    const gramos = (mer / kcal100) * 100;
+    const porToma = gramos / tomas;
+
+    $gramos.textContent = `${Math.round(gramos)} g al día`;
+    $porToma.textContent = `${Math.round(porToma)} g en cada una de las ${tomas} ${tomas === 1 ? 'toma' : 'tomas'}, unas ${Math.round(mer)} kcal al día.`;
+    $rer.textContent = `${Math.round(rer)} kcal`;
+    $mer.textContent = `${Math.round(mer)} kcal`;
+    $premios.textContent = `${Math.round(mer * 0.1)} kcal`;
+    $saco.textContent = `${Math.round(3000 / gramos)} días`;
+
+    const adelgaza = factor === 1;
+    $aviso.textContent = adelgaza
+      ? 'Para adelgazar: pesa la ración con una báscula de cocina y pésale a él cada dos semanas. Perder más de un 2% del peso por semana no es sano.'
+      : 'Pesa la ración las primeras semanas en vez de usar el cacito: el mismo cacito de dos piensos distintos son gramos distintos.';
+    $resultado.className = `resultado ${adelgaza ? 'nivel--ojo' : 'nivel--ok'}`;
+  }
+
+  for (const el of [$peso, $kcal]) el.addEventListener('input', calcular);
+  for (const el of [$factor, $tomas]) el.addEventListener('change', calcular);
+  calcular();
+</script>

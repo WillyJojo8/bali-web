@@ -1,0 +1,225 @@
+---
+import Herramienta from '../../layouts/Herramienta.astro';
+import { mesActual } from '../../lib/fechas';
+
+export const prerender = false;
+
+const preguntas = [
+  {
+    p: '¿Cómo se mide el contorno de pecho de un perro?',
+    r: 'Con una cinta métrica de costura, rodeando el tórax por la parte más ancha: justo detrás de las axilas, unos dos dedos por detrás de las patas delanteras. El perro de pie y la cinta ceñida pero sin apretar. Si solo tienes una cuerda, mídela después con una regla.',
+  },
+  {
+    p: '¿Qué talla de arnés le pido si está entre dos?',
+    r: 'La grande, salvo que el arnés lleve poca regulación. Un arnés algo holgado se ajusta con las correas; uno pequeño no hay manera de agrandarlo y le rozará las axilas. En cachorros, siempre la grande.',
+  },
+  {
+    p: '¿Cómo sé que el arnés le queda bien?',
+    r: 'La regla de los dos dedos: tienen que caber dos dedos planos entre la cinta y el cuerpo, en el cuello y en el pecho. Si no caben, aprieta; si cabe la mano entera, se lo saca por la cabeza en el primer susto.',
+  },
+  {
+    p: '¿Arnés o collar?',
+    r: 'Para pasear, arnés — reparte la tensión por el pecho en vez de concentrarla en la tráquea, y en razas pequeñas eso importa porque el colapso traqueal es frecuente. El collar, para la chapa de identificación, que en España es obligatoria.',
+  },
+  {
+    p: '¿Las tallas son iguales en todas las marcas?',
+    r: 'Ni de lejos. Una M de una marca puede ser una S de otra. Esta calculadora te da la talla orientativa y, sobre todo, los centímetros: pide siempre por centímetros mirando la tabla de la tienda.',
+  },
+];
+
+const mes = mesActual();
+---
+<Herramienta
+  ruta="/herramientas/talla-arnes/"
+  titulo={`Calculadora de talla de arnés y collar para perro · ${mes}`}
+  descripcion="Mide el contorno de pecho y de cuello de tu perro y te decimos qué talla de arnés pedir, con los centímetros exactos para comparar con la tabla de cada tienda."
+  h1="¿QUÉ TALLA DE ARNÉS LE PIDO A MI PERRO?"
+  entradilla="La mitad de las devoluciones de arneses son por la talla. Mide el contorno de pecho, el de cuello y apunta el peso: en dos segundos sabes qué pedir y con cuántos centímetros de margen."
+  preguntas={preguntas}
+  cuponDe="accesorios"
+>
+  <form class="calc" id="calc">
+    <div class="calc__fila">
+      <label>
+        Contorno de pecho
+        <input type="number" id="pecho" min="15" max="130" step="0.5" value="40" inputmode="decimal" />
+        <small>En cm, por detrás de las patas delanteras. Es la medida que manda.</small>
+      </label>
+      <label>
+        Contorno de cuello
+        <input type="number" id="cuello" min="10" max="90" step="0.5" value="28" inputmode="decimal" />
+        <small>En cm, por donde le queda el collar.</small>
+      </label>
+    </div>
+    <div class="calc__fila">
+      <label>
+        Peso
+        <input type="number" id="peso" min="0.5" max="90" step="0.1" value="4" inputmode="decimal" />
+        <small>En kilos. Solo para comprobar que cuadra.</small>
+      </label>
+    </div>
+  </form>
+
+  <div class="resultado" id="resultado">
+    <p class="resultado__grande" id="talla">—</p>
+    <p class="resultado__sub" id="rango"></p>
+    <ul class="resultado__detalle">
+      <li><span>Talla por el pecho</span><b id="porPecho">—</b></li>
+      <li><span>Talla por el cuello</span><b id="porCuello">—</b></li>
+      <li><span>Talla por el peso</span><b id="porPeso">—</b></li>
+      <li><span>Collar recomendado</span><b id="collar">—</b></li>
+    </ul>
+    <p class="resultado__sub" id="aviso"></p>
+  </div>
+
+  <div slot="explicacion">
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Para comparar con cualquier tienda</p>
+          <h2 class="display">TABLA DE TALLAS</h2>
+        </div>
+      </div>
+      <div class="tabla-envoltorio">
+        <table class="tabla">
+          <thead>
+            <tr><th>Talla</th><th>Pecho (cm)</th><th>Cuello (cm)</th><th>Peso (kg)</th><th>Razas típicas</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>XS</td><td>28–38</td><td>20–28</td><td>1–4</td><td>Chihuahua, caniche toy, yorkshire</td></tr>
+            <tr><td>S</td><td>38–48</td><td>26–34</td><td>4–8</td><td>Bichón, shih tzu, caniche mini</td></tr>
+            <tr><td>M</td><td>48–60</td><td>32–42</td><td>8–15</td><td>Beagle, cocker, schnauzer mediano</td></tr>
+            <tr><td>L</td><td>60–75</td><td>40–52</td><td>15–27</td><td>Border collie, bulldog, galgo</td></tr>
+            <tr><td>XL</td><td>75–95</td><td>50–62</td><td>27–45</td><td>Pastor alemán, labrador, boxer</td></tr>
+            <tr><td>XXL</td><td>95–115</td><td>60–75</td><td>45+</td><td>Mastín, San Bernardo, gran danés</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prosa">
+        <p>
+          <strong>Cómo medir sin pelearte con el perro:</strong> ponlo de pie,
+          pasa la cinta por detrás de las axilas y rodéale el tórax por la parte
+          más ancha. Si se mueve, usa un cordón, marca con el dedo y mídelo
+          después con una regla.
+        </p>
+        <p>
+          <strong>La regla de los dos dedos:</strong> entre la cinta y el cuerpo
+          tienen que caber dos dedos planos. Ni uno — aprieta — ni la mano
+          entera — se escapa.
+        </p>
+        <p>
+          <strong>Con perros de pelo rizado</strong>, como Bali, mide después de
+          la peluquería o cuenta con perder dos o tres centímetros el día que le
+          toque. Es la trampa clásica del caniche.
+        </p>
+        <p class="nota-legal">
+          Las tallas cambian de una marca a otra. Usa esta tabla para saber qué
+          pedir y contrasta siempre los centímetros con la tabla de la tienda.
+        </p>
+      </div>
+    </section>
+  </div>
+</Herramienta>
+
+<style>
+  .tabla-envoltorio{overflow-x:auto;margin-bottom:24px}
+  .tabla{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+  .tabla th,.tabla td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--linea)}
+  .tabla th{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--tang);white-space:nowrap}
+  .tabla td:first-child{font-family:"Space Mono",monospace;font-weight:700;color:var(--cream)}
+  .tabla td{color:var(--cream-dim)}
+  .prosa{color:var(--cream-dim);font-size:15.5px}
+  .prosa p{margin:0 0 16px}
+  .prosa strong{color:var(--cream)}
+</style>
+
+<script>
+  /**
+   * El pecho manda: es la medida que decide si un arnés entra o no. El cuello
+   * y el peso solo sirven para avisar de que algo no cuadra — un perro con el
+   * pecho de una M y el cuello de una L suele necesitar arnés regulable.
+   */
+  interface Talla {
+    nombre: string;
+    pecho: [number, number];
+    cuello: [number, number];
+    peso: [number, number];
+  }
+
+  const TALLAS: Talla[] = [
+    { nombre: 'XS', pecho: [28, 38], cuello: [20, 28], peso: [1, 4] },
+    { nombre: 'S', pecho: [38, 48], cuello: [26, 34], peso: [4, 8] },
+    { nombre: 'M', pecho: [48, 60], cuello: [32, 42], peso: [8, 15] },
+    { nombre: 'L', pecho: [60, 75], cuello: [40, 52], peso: [15, 27] },
+    { nombre: 'XL', pecho: [75, 95], cuello: [50, 62], peso: [27, 45] },
+    { nombre: 'XXL', pecho: [95, 115], cuello: [60, 75], peso: [45, 90] },
+  ];
+
+  function busca(valor: number, campo: 'pecho' | 'cuello' | 'peso'): Talla | null {
+    if (!Number.isFinite(valor)) return null;
+    // El primero en cuyo rango cabe. Entre dos, se queda con la pequeña
+    // y luego el aviso recomienda subir si anda justo.
+    return TALLAS.find((t) => valor >= t[campo][0] && valor <= t[campo][1]) ?? null;
+  }
+
+  const $pecho = document.getElementById('pecho') as HTMLInputElement;
+  const $cuello = document.getElementById('cuello') as HTMLInputElement;
+  const $peso = document.getElementById('peso') as HTMLInputElement;
+
+  const $talla = document.getElementById('talla')!;
+  const $rango = document.getElementById('rango')!;
+  const $porPecho = document.getElementById('porPecho')!;
+  const $porCuello = document.getElementById('porCuello')!;
+  const $porPeso = document.getElementById('porPeso')!;
+  const $collar = document.getElementById('collar')!;
+  const $aviso = document.getElementById('aviso')!;
+  const $resultado = document.getElementById('resultado')!;
+
+  function calcular(): void {
+    const pecho = parseFloat($pecho.value);
+    const cuello = parseFloat($cuello.value);
+    const peso = parseFloat($peso.value);
+
+    const tPecho = busca(pecho, 'pecho');
+    const tCuello = busca(cuello, 'cuello');
+    const tPeso = busca(peso, 'peso');
+
+    $porPecho.textContent = tPecho?.nombre ?? 'fuera de tabla';
+    $porCuello.textContent = tCuello?.nombre ?? 'fuera de tabla';
+    $porPeso.textContent = tPeso?.nombre ?? 'fuera de tabla';
+
+    if (!tPecho) {
+      $talla.textContent = 'Fuera de tabla';
+      $rango.textContent = 'Revisa la medida del pecho: lo normal va de 28 a 115 cm.';
+      $collar.textContent = '—';
+      $aviso.textContent = '';
+      $resultado.className = 'resultado nivel--ojo';
+      return;
+    }
+
+    // A menos de 2 cm del tope de su talla, mejor la siguiente.
+    const justo = tPecho.pecho[1] - pecho < 2;
+    const siguiente = TALLAS[TALLAS.indexOf(tPecho) + 1];
+    const elegida = justo && siguiente ? siguiente : tPecho;
+
+    $talla.textContent = `Talla ${elegida.nombre}`;
+    $rango.textContent = `Los arneses de talla ${elegida.nombre} suelen cubrir pechos de ${elegida.pecho[0]} a ${elegida.pecho[1]} cm. El de tu perro mide ${pecho} cm.`;
+    $collar.textContent = Number.isFinite(cuello) ? `${Math.round(cuello + 2)} cm de contorno` : '—';
+
+    const avisos: string[] = [];
+    if (justo && siguiente) avisos.push(`Va justo en la ${tPecho.nombre}, así que mejor la ${siguiente.nombre}.`);
+    if (tCuello && tCuello.nombre !== elegida.nombre) {
+      avisos.push('El cuello y el pecho le piden tallas distintas: busca un arnés con las dos cintas regulables.');
+    }
+    if (tPeso && tPeso.nombre !== elegida.nombre) {
+      avisos.push('Por peso le tocaría otra talla; hazle caso al pecho, que es lo que decide.');
+    }
+    avisos.push('Comprueba siempre la tabla de la tienda: una M no mide lo mismo en dos marcas.');
+    $aviso.textContent = avisos.join(' ');
+    $resultado.className = `resultado ${avisos.length > 1 ? 'nivel--ojo' : 'nivel--ok'}`;
+  }
+
+  for (const el of [$pecho, $cuello, $peso]) el.addEventListener('input', calcular);
+  calcular();
+</script>

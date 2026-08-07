@@ -1,0 +1,222 @@
+---
+import Herramienta from '../../layouts/Herramienta.astro';
+
+export const prerender = false;
+
+const preguntas = [
+  {
+    p: '¿Por qué el chocolate es tóxico para los perros?',
+    r: 'Por la teobromina, un estimulante del cacao. Las personas la eliminamos en unas horas; un perro tarda más de un día, así que se le acumula y le afecta al corazón y al sistema nervioso. La cafeína del cacao suma en la misma dirección.',
+  },
+  {
+    p: '¿Qué chocolate es más peligroso?',
+    r: 'Cuanto más cacao, peor. El chocolate blanco es prácticamente inofensivo en cuanto a teobromina, el con leche hace falta bastante cantidad, y el negro, el de repostería y el cacao en polvo son los que mandan al veterinario. Una onza de cacao puro puede igualar a media tableta con leche.',
+  },
+  {
+    p: '¿Cuánto tarda en hacer efecto?',
+    r: 'Los primeros signos suelen aparecer entre dos y cuatro horas después, y pueden durar tres días porque la teobromina se elimina muy despacio. Vómitos, diarrea, sed, inquietud, temblores y latido acelerado son los habituales.',
+  },
+  {
+    p: '¿Le provoco el vómito en casa?',
+    r: 'No por tu cuenta. El agua oxigenada y la sal que circulan por internet le pueden hacer más daño que el chocolate. Si hay que vaciarle el estómago, lo hace el veterinario con un fármaco y en el momento adecuado.',
+  },
+  {
+    p: '¿Y si solo ha lamido un poco?',
+    r: 'Una lametada de chocolate con leche a un perro de tamaño medio no suele dar problemas. Aun así, apunta la hora y qué comió: si empieza a vomitar o a temblar, esos dos datos son lo primero que te va a preguntar el veterinario.',
+  },
+];
+---
+<Herramienta
+  ruta="/herramientas/chocolate/"
+  titulo="Mi perro ha comido chocolate: calculadora de riesgo"
+  descripcion="Calcula cuánta teobromina ha tomado tu perro según el tipo de chocolate, la cantidad y su peso, y qué nivel de riesgo supone. Ante la duda, llama al veterinario."
+  h1="MI PERRO HA COMIDO CHOCOLATE"
+  entradilla="Pon lo que se ha comido y cuánto pesa el perro. Te decimos cuánta teobromina lleva encima y si eso es preocupante. Tarda diez segundos, y si sale en rojo tienes el teléfono del veterinario más cerca que este texto."
+  preguntas={preguntas}
+>
+  <p class="aviso aviso--fuerte">
+    Esto orienta, no diagnostica. Si tu perro ha comido chocolate y está
+    temblando, vomitando, muy inquieto o con el corazón acelerado,
+    <strong>llama ya a tu veterinario o a un centro de urgencias</strong>
+    y no esperes a ninguna calculadora.
+  </p>
+
+  <form class="calc" id="calc">
+    <div class="calc__fila">
+      <label>
+        Peso del perro
+        <input type="number" id="peso" min="0.5" max="90" step="0.1" value="4" inputmode="decimal" />
+        <small>En kilos.</small>
+      </label>
+      <label>
+        Tipo de chocolate
+        <select id="tipo">
+          <option value="0.01">Chocolate blanco</option>
+          <option value="2" selected>Chocolate con leche</option>
+          <option value="5">Negro, 45–60% de cacao</option>
+          <option value="8">Negro, 70–85% de cacao</option>
+          <option value="15">De repostería / cobertura sin azúcar</option>
+          <option value="24">Cacao puro en polvo</option>
+          <option value="4">Bombones o galletas con chocolate</option>
+        </select>
+        <small>Si dudas, elige el más fuerte de los posibles.</small>
+      </label>
+    </div>
+    <div class="calc__fila">
+      <label>
+        Cantidad comida
+        <input type="number" id="gramos" min="1" max="2000" step="1" value="20" inputmode="numeric" />
+        <small>En gramos. Una onza de tableta son unos 10 g; una tableta entera, 100 g.</small>
+      </label>
+    </div>
+  </form>
+
+  <div class="resultado" id="resultado">
+    <p class="resultado__grande" id="nivel">—</p>
+    <p class="resultado__sub" id="explica"></p>
+    <ul class="resultado__detalle">
+      <li><span>Teobromina total</span><b id="total">—</b></li>
+      <li><span>Por kilo de perro</span><b id="porKilo">—</b></li>
+      <li><span>Umbral de síntomas (20 mg/kg)</span><b id="umbral">—</b></li>
+      <li><span>Cantidad que sería segura</span><b id="segura">—</b></li>
+    </ul>
+    <p class="resultado__sub" id="quehacer"></p>
+  </div>
+
+  <div slot="explicacion">
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Qué significan los números</p>
+          <h2 class="display">LOS UMBRALES</h2>
+        </div>
+      </div>
+      <div class="tabla-envoltorio">
+        <table class="tabla">
+          <thead><tr><th>Teobromina</th><th>Qué se espera</th></tr></thead>
+          <tbody>
+            <tr><td>Menos de 20 mg/kg</td><td>Poco probable que pase nada. Vigilancia en casa.</td></tr>
+            <tr><td>20–40 mg/kg</td><td>Vómitos, diarrea, sed, inquietud. Llamar al veterinario.</td></tr>
+            <tr><td>40–60 mg/kg</td><td>Alteraciones del ritmo del corazón. Atención veterinaria.</td></tr>
+            <tr><td>Más de 60 mg/kg</td><td>Riesgo de temblores y convulsiones. Urgencia.</td></tr>
+            <tr><td>Más de 100 mg/kg</td><td>Puede ser mortal. Urgencia inmediata.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prosa">
+        <p>
+          <strong>Por qué el tamaño del perro lo cambia todo:</strong> la misma
+          onza de chocolate negro son 4 mg/kg en un labrador de 30 kg y 40 mg/kg
+          en un caniche toy de 3. Lo que para uno es una anécdota, para el otro
+          es una visita a urgencias.
+        </p>
+        <p>
+          <strong>Qué apuntar antes de llamar:</strong> peso del perro, tipo de
+          chocolate, cantidad aproximada y hora a la que se lo comió. Si tienes
+          el envoltorio, guárdalo: el porcentaje de cacao está ahí.
+        </p>
+        <p>
+          <strong>Otros venenos frecuentes en casa</strong> que la gente no
+          espera: xilitol (el edulcorante de chicles y algunas mantequillas de
+          cacahuete, más peligroso que el chocolate), uvas y pasas, cebolla y ajo,
+          masa de pan cruda y aguacate.
+        </p>
+        <p class="nota-legal">
+          Los umbrales son los que maneja la bibliografía veterinaria habitual y
+          valen como orientación. Cada perro es distinto y hay enfermedades
+          previas — de corazón, sobre todo — que bajan el listón. La decisión la
+          toma un veterinario, no esta página.
+        </p>
+      </div>
+    </section>
+  </div>
+</Herramienta>
+
+<style>
+  .aviso--fuerte{border-left-color:var(--pink);color:var(--cream);margin-bottom:22px}
+  .tabla-envoltorio{overflow-x:auto;margin-bottom:24px}
+  .tabla{border-collapse:collapse;width:100%;min-width:460px;font-size:14px}
+  .tabla th,.tabla td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--linea)}
+  .tabla th{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--tang);white-space:nowrap}
+  .tabla td:first-child{font-family:"Space Mono",monospace;color:var(--cream);white-space:nowrap}
+  .tabla td{color:var(--cream-dim)}
+  .prosa{color:var(--cream-dim);font-size:15.5px}
+  .prosa p{margin:0 0 16px}
+  .prosa strong{color:var(--cream)}
+</style>
+
+<script>
+  /**
+   * Teobromina = gramos × mg por gramo del tipo de chocolate. La dosis que
+   * importa es por kilo de perro, y los umbrales son los de la bibliografía
+   * veterinaria: 20 mg/kg primeros signos, 40–60 cardíaco, más de 60 nervioso.
+   *
+   * La calculadora nunca dice "no pasa nada": dice lo que dicen los números y
+   * recuerda quién decide, que es el veterinario.
+   */
+  const $peso = document.getElementById('peso') as HTMLInputElement;
+  const $tipo = document.getElementById('tipo') as HTMLSelectElement;
+  const $gramos = document.getElementById('gramos') as HTMLInputElement;
+
+  const $nivel = document.getElementById('nivel')!;
+  const $explica = document.getElementById('explica')!;
+  const $total = document.getElementById('total')!;
+  const $porKilo = document.getElementById('porKilo')!;
+  const $umbral = document.getElementById('umbral')!;
+  const $segura = document.getElementById('segura')!;
+  const $quehacer = document.getElementById('quehacer')!;
+  const $resultado = document.getElementById('resultado')!;
+
+  function calcular(): void {
+    const peso = parseFloat($peso.value);
+    const porGramo = parseFloat($tipo.value);
+    const gramos = parseFloat($gramos.value);
+    if (!Number.isFinite(peso) || peso <= 0 || !Number.isFinite(gramos) || gramos <= 0) return;
+
+    const total = gramos * porGramo;
+    const dosis = total / peso;
+
+    let nivel: string;
+    let explica: string;
+    let quehacer: string;
+    let clase: string;
+
+    if (dosis < 20) {
+      nivel = 'Riesgo bajo';
+      explica = 'La cantidad se queda por debajo del umbral en el que suelen aparecer síntomas.';
+      quehacer = 'Vigílalo las próximas doce horas: vómitos, diarrea, temblores, sed exagerada o latido acelerado. Si aparece cualquiera, llama al veterinario y dile la hora y lo que comió.';
+      clase = 'nivel--ok';
+    } else if (dosis < 40) {
+      nivel = 'Riesgo moderado';
+      explica = 'Está por encima del umbral de síntomas digestivos y de inquietud.';
+      quehacer = 'Llama a tu veterinario y cuéntale los números de arriba. Puede que solo haya que vigilar, pero esa decisión no es tuya ni mía.';
+      clase = 'nivel--ojo';
+    } else if (dosis < 60) {
+      nivel = 'Riesgo alto';
+      explica = 'A esta dosis se describen alteraciones del ritmo cardíaco.';
+      quehacer = 'Llama ya al veterinario o a un centro de urgencias, aunque el perro esté tranquilo. Cuanto antes se actúe, menos hace falta hacer.';
+      clase = 'nivel--mal';
+    } else {
+      nivel = 'Urgencia';
+      explica = dosis >= 100
+        ? 'Está en el rango que la bibliografía describe como potencialmente mortal.'
+        : 'A esta dosis se describen temblores y convulsiones.';
+      quehacer = 'Vete al veterinario de urgencias ahora, con el envoltorio si lo tienes. No le provoques el vómito por tu cuenta.';
+      clase = 'nivel--mal';
+    }
+
+    $nivel.textContent = nivel;
+    $explica.textContent = `${explica} Son ${Math.round(dosis)} mg de teobromina por kilo de perro.`;
+    $total.textContent = `${Math.round(total)} mg`;
+    $porKilo.textContent = `${Math.round(dosis)} mg/kg`;
+    $umbral.textContent = `${Math.round((20 * peso) / porGramo)} g de este chocolate`;
+    $segura.textContent = `menos de ${Math.max(1, Math.floor((20 * peso) / porGramo))} g`;
+    $quehacer.textContent = quehacer;
+    $resultado.className = `resultado ${clase}`;
+  }
+
+  for (const el of [$peso, $gramos]) el.addEventListener('input', calcular);
+  $tipo.addEventListener('change', calcular);
+  calcular();
+</script>
