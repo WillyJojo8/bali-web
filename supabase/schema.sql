@@ -28,19 +28,24 @@ $$;
 
 -- ---------- Cupones ----------
 create table if not exists cupones (
-  id          uuid primary key default gen_random_uuid(),
-  marca       text not null,
-  valor       text not null,          -- "15", "5"
-  unidad      text not null default '% dto',
-  codigo      text not null,
-  que         text,                   -- "Arneses y correas"
-  url         text,
-  destacado   boolean not null default false,
-  activo      boolean not null default true,
-  caduca      date,                   -- null = no caduca
-  orden       int not null default 0,
-  creado_en   timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  marca         text not null,
+  valor         text,                   -- "15", "5". Vacío si la tienda no lo dice
+  unidad        text not null default '% dto',
+  codigo        text not null,
+  que           text,                   -- "Arneses y correas"
+  url           text,
+  categoria     text not null default 'otros'
+                check (categoria in ('accesorios','comida','higiene','juguetes','camas','salud','otros')),
+  destacado     boolean not null default false,
+  activo        boolean not null default true,
+  caduca        date,                   -- null = no caduca
+  verificado_en date,                   -- el día que comprobaste que funciona
+  orden         int not null default 0,
+  creado_en     timestamptz not null default now()
 );
+
+create index if not exists cupones_categoria_idx on cupones (categoria);
 
 -- ---------- Entradas del blog ----------
 create table if not exists posts (

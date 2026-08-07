@@ -1,7 +1,12 @@
 ---
+import { CATEGORIAS } from '../lib/seo';
+
 interface Props { accion: string; cupon?: any }
 const { accion, cupon } = Astro.props;
 const editando = Boolean(cupon);
+
+/** Un cupón nuevo se da por comprobado hoy: lo acabas de copiar de la tienda. */
+const hoy = new Date().toISOString().slice(0, 10);
 ---
 <form class="form" data-accion={accion} data-editando={String(editando)}>
   <div class="fila">
@@ -17,8 +22,9 @@ const editando = Boolean(cupon);
 
   <div class="fila">
     <div class="campo">
-      <label for="valor">Valor</label>
-      <input id="valor" name="valor" required value={cupon?.valor ?? ''} placeholder="15" />
+      <label for="valor">Valor (opcional)</label>
+      <input id="valor" name="valor" value={cupon?.valor ?? ''} placeholder="15" inputmode="decimal" />
+      <small>Déjalo vacío si la tienda no dice cuánto descuenta. Nunca lo inventes.</small>
     </div>
     <div class="campo">
       <label for="unidad">Unidad</label>
@@ -41,9 +47,28 @@ const editando = Boolean(cupon);
   </div>
 
   <div class="campo">
-    <label for="caduca">Caduca el (opcional)</label>
-    <input id="caduca" name="caduca" type="date" value={cupon?.caduca ?? ''} />
-    <small>A partir de esa fecha deja de mostrarse solo.</small>
+    <label for="categoria">Categoría</label>
+    <select id="categoria" name="categoria">
+      {CATEGORIAS.map((c) => (
+        <option value={c.id} selected={(cupon?.categoria ?? 'otros') === c.id}>
+          {c.emoji} {c.nombre} — {c.gancho}
+        </option>
+      ))}
+    </select>
+    <small>Es lo que mueven los filtros de la página de códigos.</small>
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      <label for="caduca">Caduca el (opcional)</label>
+      <input id="caduca" name="caduca" type="date" value={cupon?.caduca ?? ''} />
+      <small>A partir de esa fecha deja de mostrarse solo.</small>
+    </div>
+    <div class="campo">
+      <label for="verificado_en">Comprobado el</label>
+      <input id="verificado_en" name="verificado_en" type="date" value={cupon?.verificado_en ?? hoy} />
+      <small>Sale en la web como «verificado hace X». Ponlo al día cada vez que lo pruebes.</small>
+    </div>
   </div>
 
   <label class="check">
@@ -77,11 +102,14 @@ const editando = Boolean(cupon);
     const cuerpo = {
       marca: f.get('marca'),
       codigo: String(f.get('codigo')).toUpperCase().trim(),
-      valor: f.get('valor'),
+      // Tras la migración 002 la columna admite null: sin cifra se guarda vacío.
+      valor: String(f.get('valor') ?? '').trim() || null,
       unidad: f.get('unidad'),
       que: f.get('que') || null,
       url: f.get('url') || null,
+      categoria: f.get('categoria') || 'otros',
       caduca: f.get('caduca') || null,
+      verificado_en: f.get('verificado_en') || null,
       destacado: f.get('destacado') === 'on',
       activo: f.get('activo') === 'on',
     };

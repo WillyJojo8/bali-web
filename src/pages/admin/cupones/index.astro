@@ -1,5 +1,7 @@
 ---
 import Admin from '../../../layouts/Admin.astro';
+import { categoria } from '../../../lib/seo';
+import { textoVerificado } from '../../../lib/fechas';
 export const prerender = false;
 
 const db = Astro.locals.db!;
@@ -16,8 +18,11 @@ const { data: cupones } = await db.from('cupones').select('*')
       {cupones.map((c) => (
         <div class="item">
           <div class="item__txt">
-            <div class="item__t">{c.codigo} · −{c.valor}{c.unidad}</div>
-            <div class="item__s">{c.marca}{c.que ? ` · ${c.que}` : ''}</div>
+            <div class="item__t">{c.codigo}{c.valor ? ` · −${c.valor}${c.unidad}` : ' · sin % indicado'}</div>
+            <div class="item__s">
+              {categoria(c.categoria).emoji} {c.marca}{c.que ? ` · ${c.que}` : ''}
+              {c.verificado_en && ` · ${textoVerificado(c.verificado_en)?.toLowerCase()}`}
+            </div>
           </div>
           {c.destacado && <span class="etiqueta">Destacado</span>}
           <span class:list={['etiqueta', c.activo ? 'etiqueta--on' : 'etiqueta--off']}>
