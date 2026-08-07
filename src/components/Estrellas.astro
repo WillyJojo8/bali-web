@@ -1,0 +1,30 @@
+---
+/**
+ * Nota de 1 a 5. Se dibuja con SVG y no con el carácter ★ porque el emoji
+ * cambia de forma en cada sistema y en algunos sale de color.
+ *
+ * El texto alternativo va en un <span> oculto: quien use lector de pantalla
+ * oye "4 de 5", no cinco veces "estrella".
+ */
+interface Props {
+  nota: number;
+  tamano?: number;
+}
+const { nota, tamano = 16 } = Astro.props;
+const enteras = Math.round(nota);
+---
+<span class="estrellas" style={`--t:${tamano}px`}>
+  <span class="visually-hidden">{nota} de 5</span>
+  {[1, 2, 3, 4, 5].map((i) => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" class={i <= enteras ? 'on' : ''}>
+      <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" />
+    </svg>
+  ))}
+</span>
+
+<style>
+  .estrellas{display:inline-flex;gap:2px;vertical-align:middle}
+  .estrellas svg{width:var(--t);height:var(--t);fill:rgba(255,243,233,.18)}
+  .estrellas svg.on{fill:var(--tang)}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>

@@ -1,0 +1,139 @@
+---
+import Base from '../layouts/Base.astro';
+import Estrellas from '../components/Estrellas.astro';
+import HuecoAnuncio from '../components/HuecoAnuncio.astro';
+import { getOpiniones, getCupones } from '../lib/contenido';
+import { producto } from '../lib/jsonld';
+import { slug } from '../lib/seo';
+import { fechaLegible, mesActual } from '../lib/fechas';
+
+export const prerender = false;
+
+/**
+ * Las opiniones ya se escribían desde el panel, pero no se veían en ninguna
+ * parte de la web pública. Ahora tienen página, y con datos estructurados de
+ * tipo Review: es lo que puede sacar las estrellas amarillas en Google.
+ *
+ * Las notas son las que hay en la base de datos. Inventarlas o redondear
+ * hacia arriba es exactamente lo que Google penaliza, así que no se toca.
+ */
+const [opiniones, cupones] = await Promise.all([getOpiniones(), getCupones()]);
+
+const media = opiniones.length
+  ? Math.round((opiniones.reduce((s, o) => s + o.nota, 0) / opiniones.length) * 10) / 10
+  : 0;
+
+/** Si la marca opinada tiene cupón, se enlaza: la reseña convence, el cupón cierra. */
+function cuponDe(marca: string | null) {
+  if (!marca) return null;
+  return cupones.find((c) => slug(c.marca) === slug(marca)) ?? null;
+}
+
+const mes = mesActual();
+const esquema = opiniones.length
+  ? [
+      {
+        '@type': 'ItemList',
+        numberOfItems: opiniones.length,
+        itemListElement: opiniones.map((o, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          item: producto(Astro.site, o),
+        })),
+      },
+    ]
+  : [];
+---
+<Base
+  titulo={`Opiniones de productos para perros · ${mes}`}
+  descripcion={`${opiniones.length} opiniones honestas de productos para perros probados por Bali: arneses, camas, pienso y juguetes. Nota, foto y para qué sirve de verdad.`}
+  miga={[{ nombre: 'Opiniones', url: '/opiniones/' }]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Probado por un caniche toy · {mes}</p>
+    <h1 class="display">OPINIONES DE PRODUCTOS PARA PERROS</h1>
+    <p class="entradilla">
+      Todo lo que Bali ha probado, con su nota. Sin notas de prensa: si algo se
+      rompió a la semana o le rozaba, está escrito. Las opiniones de productos
+      cedidos por marcas van marcadas como tal.
+    </p>
+    {opiniones.length > 0 && (
+      <p class="media">
+        <Estrellas nota={media} tamano={20} />
+        <span><strong>{media}</strong> de media en {opiniones.length} {opiniones.length === 1 ? 'producto' : 'productos'}</span>
+      </p>
+    )}
+  </section>
+
+  <section class="seccion">
+    {opiniones.length === 0 ? (
+      <p class="vacio">Todavía no hay opiniones publicadas. Bali sigue probando.</p>
+    ) : (
+      <div class="lista">
+        {opiniones.map((o) => {
+          const cupon = cuponDe(o.marca);
+          return (
+            <article class="op">
+              {o.foto_url && (
+                <div class="op__foto">
+                  <img src={o.foto_url} alt={`${o.producto}${o.marca ? ` de ${o.marca}` : ''}`} loading="lazy" />
+                </div>
+              )}
+              <div class="op__texto">
+                <div class="op__alto">
+                  <h2 class="op__producto">{o.producto}</h2>
+                  <Estrellas nota={o.nota} />
+                </div>
+                {o.marca && <p class="op__marca">{o.marca}</p>}
+                <p class="op__cuerpo">{o.texto}</p>
+                <p class="op__pie">
+                  <time datetime={o.creado_en}>{fechaLegible(o.creado_en)}</time>
+                  {cupon && (
+                    <a href={`/codigos/${slug(cupon.marca)}/`}>
+                      Código {cupon.codigo}: −{cupon.valor}{cupon.unidad.includes('€') ? '€' : '%'} →
+                    </a>
+                  )}
+                </p>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(28px,7.2vw,46px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 0;max-width:56ch}
+  .media{display:flex;align-items:center;gap:10px;margin:18px 0 0;font-size:14px;color:var(--cream-dim)}
+  .media strong{color:var(--cream);font-size:16px}
+  .vacio{color:var(--cream-dim)}
+
+  .lista{display:flex;flex-direction:column;gap:14px}
+  .op{background:var(--card);border-radius:var(--radio);overflow:hidden;display:grid;
+    grid-template-columns:128px 1fr}
+  .op:not(:has(.op__foto)){grid-template-columns:1fr}
+  .op__foto{aspect-ratio:1;background:var(--bg-2)}
+  .op__foto img{width:100%;height:100%;object-fit:cover}
+  .op__texto{padding:16px;min-width:0}
+  .op__alto{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .op__producto{font-size:17px;font-weight:600;margin:0}
+  .op__marca{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--tang);margin:4px 0 0}
+  .op__cuerpo{font-size:14.5px;color:var(--cream-dim);margin:10px 0 0}
+  .op__pie{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:12px 0 0;
+    font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  .op__pie time{color:rgba(255,243,233,.35)}
+  .op__pie a{color:var(--mint);text-decoration:none}
+  .op__pie a:hover{text-decoration:underline;text-underline-offset:3px}
+
+  @media (max-width:420px){
+    .op{grid-template-columns:1fr}
+    .op__foto{aspect-ratio:16/9}
+  }
+</style>
