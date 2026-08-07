@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import { getTiendas } from '../lib/contenido';
+import { categoria } from '../lib/seo';
+import { mesActual } from '../lib/fechas';
+
+export const prerender = false;
+
+/**
+ * Índice de tiendas. Su trabajo no es traer visitas por sí mismo: es dar a
+ * Google un sitio desde el que llegar a todas las páginas de tienda con un
+ * solo salto desde el menú.
+ */
+const tiendas = await getTiendas();
+const mes = mesActual();
+
+const esquema = [
+  {
+    '@type': 'ItemList',
+    numberOfItems: tiendas.length,
+    itemListElement: tiendas.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: t.nombre,
+      url: new URL(`/codigos/${t.slug}/`, Astro.site ?? 'https://bali.example.com').toString(),
+    })),
+  },
+];
+---
+<Base
+  titulo={`Tiendas de perros con código de descuento · ${mes}`}
+  descripcion={`Las ${tiendas.length} tiendas de productos para perros con las que Bali tiene código de descuento activo. Una página por tienda, con todos sus cupones comprobados.`}
+  miga={[{ nombre: 'Tiendas', url: '/tiendas/' }]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Directorio · {mes}</p>
+    <h1 class="display">TIENDAS CON DESCUENTO</h1>
+    <p class="entradilla">
+      Todas las tiendas de productos para perros con las que Bali tiene un
+      código activo: accesorios, comida, juguetes y peluquería. Entra en
+      cualquiera para ver sus cupones y cuándo se comprobó cada uno.
+    </p>
+  </section>
+
+  <section class="seccion">
+    {tiendas.length === 0 ? (
+      <p class="vacio">Todavía no hay ninguna tienda con código activo.</p>
+    ) : (
+      <ul class="rejilla">
+        {tiendas.map((t) => {
+          const cat = categoria(t.mejor.categoria);
+          const dto = t.mejor.unidad.includes('€') ? `${t.mejor.valor}€` : `${t.mejor.valor}%`;
+          return (
+            <li>
+              <a href={`/codigos/${t.slug}/`}>
+                <span class="dto">{dto}</span>
+                <span class="nombre">{t.nombre}</span>
+                <span class="sub">{cat.emoji} {cat.nombre} · {t.cupones.length} {t.cupones.length === 1 ? 'código' : 'códigos'}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </section>
+
+  <p class="volver"><a href="/codigos/">← Todos los cupones para perros</a></p>
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(30px,7.6vw,50px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 0;max-width:56ch}
+  .vacio{color:var(--cream-dim)}
+
+  .rejilla{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+  .rejilla a{display:grid;gap:3px;background:var(--card);border-radius:14px;
+    padding:16px;text-decoration:none;transition:background .16s,transform .16s}
+  .rejilla a:hover{background:var(--card-2);transform:translateY(-2px)}
+  .dto{font-family:"Anybody","Arial Black",sans-serif;font-variation-settings:"wdth" 120;
+    font-weight:900;font-size:26px;letter-spacing:-.03em;color:var(--tang);line-height:1}
+  .nombre{font-weight:600;font-size:15.5px;margin-top:4px}
+  .sub{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--cream-dim)}
+
+  .volver{margin-top:12px}
+  .volver a{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--cream-dim);text-decoration:none}
+  .volver a:hover{color:var(--tang)}
+</style>

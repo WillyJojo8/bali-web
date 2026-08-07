@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import vercel from '@astrojs/vercel';
+import { loadEnv } from 'vite';
 
 /**
  * El dominio sale de la variable PUBLIC_SITE_URL. Cuando compres el dominio
@@ -10,8 +11,12 @@ import vercel from '@astrojs/vercel';
  *
  * De él dependen las URLs canónicas, el mapa del sitio, el RSS, las imágenes
  * de compartir y todo el JSON-LD. Si está mal, Google indexa mal.
+ *
+ * Hace falta loadEnv porque este archivo se ejecuta antes de que Astro cargue
+ * el .env: con process.env a secas funcionaría en Vercel pero no en local.
  */
-const site = process.env.PUBLIC_SITE_URL || 'https://bali.example.com';
+const { PUBLIC_SITE_URL } = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
+const site = PUBLIC_SITE_URL || 'https://bali.example.com';
 
 export default defineConfig({
   site,

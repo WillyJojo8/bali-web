@@ -1,33 +1,82 @@
 ---
+import { categoria as buscaCategoria, slug } from '../lib/seo';
+import { textoCaducidad, textoVerificado } from '../lib/fechas';
+
 interface Props {
   marca: string;
   valor: string;
   unidad: string;
   codigo: string;
-  que: string;
-  url: string;
+  que?: string | null;
+  url?: string | null;
+  categoria?: string | null;
+  caduca?: string | null;
+  verificado_en?: string | null;
+  destacado?: boolean;
+  /** En la página de una tienda sobra el enlace a esa misma tienda. */
+  enlaceTienda?: boolean;
 }
-const { marca, valor, unidad, codigo, que, url } = Astro.props;
+
+const {
+  marca, valor, unidad, codigo, que, url,
+  categoria, caduca, verificado_en, destacado = false, enlaceTienda = true,
+} = Astro.props;
+
+const cat = buscaCategoria(categoria);
+const caducidad = textoCaducidad(caduca);
+const verificado = textoVerificado(verificado_en);
+const urlTienda = `/codigos/${slug(marca)}/`;
+
+/** Todo lo que el buscador de la página mira, junto y en minúsculas. */
+const busqueda = [marca, que, codigo, cat.nombre, cat.gancho].filter(Boolean).join(' ').toLowerCase();
 ---
-<article class="ticket" data-codigo={codigo}>
+<article
+  class:list={['ticket', { 'ticket--destacado': destacado }]}
+  data-codigo={codigo}
+  data-categoria={cat.id}
+  data-busqueda={busqueda}
+  data-url={url ?? ''}
+>
   <div class="ticket__talon">
     <span class="ticket__valor">{valor}</span>
     <span class="ticket__unidad">{unidad}</span>
   </div>
+
   <div class="ticket__cuerpo">
-    <h3 class="ticket__marca">{marca}</h3>
-    <p class="ticket__que">{que}</p>
+    <div class="ticket__alto">
+      <h3 class="ticket__marca">
+        {enlaceTienda ? <a href={urlTienda}>{marca}</a> : marca}
+      </h3>
+      <span class="ticket__cat" title={cat.gancho}>{cat.emoji} {cat.nombre}</span>
+    </div>
+
+    {que && <p class="ticket__que">{que}</p>}
+
     <div class="ticket__fila">
       <span class="ticket__codigo">{codigo}</span>
-      <button class="ticket__copiar" type="button">Copiar</button>
+      <button class="ticket__copiar" type="button" aria-label={`Copiar el código ${codigo}`}>Copiar</button>
     </div>
-    <a class="ticket__ir" href={url} target="_blank" rel="noopener sponsored">Ir a la tienda →</a>
+
+    <div class="ticket__pie">
+      {url && (
+        <a class="ticket__ir" href={url} target="_blank" rel="noopener sponsored nofollow">
+          Ir a la tienda →
+        </a>
+      )}
+      <span class="ticket__meta">
+        {verificado && <span class="ticket__ok">✓ {verificado}</span>}
+        {caducidad && (
+          <span class:list={['ticket__caduca', { 'es-urgente': caducidad.urgente }]}>{caducidad.texto}</span>
+        )}
+      </span>
+    </div>
   </div>
 </article>
 
 <style>
   .ticket{display:grid;grid-template-columns:100px 1fr;background:var(--card);
     border-radius:18px;overflow:hidden;box-shadow:0 14px 30px -18px #000}
+  .ticket--destacado{box-shadow:0 0 0 2px var(--tang),0 14px 30px -18px #000}
   .ticket__talon{background:var(--pink);color:#fff;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:2px;padding:22px 8px;position:relative}
   .ticket:nth-of-type(3n+2) .ticket__talon{background:var(--tang);color:#2A1810}
@@ -38,9 +87,17 @@ const { marca, valor, unidad, codigo, que, url } = Astro.props;
     font-weight:900;font-size:34px;line-height:.9;letter-spacing:-.03em}
   .ticket__unidad{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.14em;
     text-transform:uppercase;opacity:.85}
+
   .ticket__cuerpo{padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
-  .ticket__marca{font-size:16px;font-weight:600;margin:0}
+  .ticket__alto{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .ticket__marca{font-size:16px;font-weight:600;margin:0;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .ticket__marca a{text-decoration:none}
+  .ticket__marca a:hover{color:var(--tang);text-decoration:underline;text-underline-offset:3px}
+  .ticket__cat{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--cream-dim);white-space:nowrap}
   .ticket__que{font-size:13.5px;color:var(--cream-dim);margin:0}
+
   .ticket__fila{display:flex;align-items:center;gap:10px;margin-top:2px}
   .ticket__codigo{font-family:"Space Mono",monospace;font-weight:700;font-size:19px;
     letter-spacing:.04em;border:2px dashed rgba(255,243,233,.3);border-radius:9px;
@@ -50,35 +107,62 @@ const { marca, valor, unidad, codigo, que, url } = Astro.props;
     padding:10px 13px;font-weight:700;cursor:pointer;white-space:nowrap}
   .ticket.copiado .ticket__copiar{background:var(--mint);color:#132a20}
   .ticket.copiado .ticket__codigo{border-color:var(--mint);border-style:solid}
-  .ticket__ir{font-size:13.5px;color:var(--tang);font-weight:600;text-decoration:none;align-self:flex-start}
+
+  .ticket__pie{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .ticket__ir{font-size:13.5px;color:var(--tang);font-weight:600;text-decoration:none}
   .ticket__ir:hover{text-decoration:underline;text-underline-offset:3px}
+  .ticket__meta{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto;
+    font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+  .ticket__ok{color:var(--mint)}
+  .ticket__caduca{color:var(--cream-dim)}
+  .ticket__caduca.es-urgente{color:var(--pink)}
 </style>
 
 <script>
-  // Se ejecuta una vez por página, aunque haya varios tickets.
-  document.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('.ticket__copiar');
-    if (!btn) return;
-    const ticket = btn.closest('.ticket') as HTMLElement;
-    const codigo = ticket.dataset.codigo ?? '';
-
-    const marcar = () => {
-      ticket.classList.add('copiado');
-      btn.textContent = '¡Copiado!';
-      setTimeout(() => {
-        ticket.classList.remove('copiado');
-        btn.textContent = 'Copiar';
-      }, 2000);
-    };
-
+  /**
+   * Un solo listener para todos los tickets de la página.
+   *
+   * Además de copiar con el botón, al pulsar "Ir a la tienda" se copia el
+   * código automáticamente: casi todo el mundo entra a la tienda y ahí se
+   * da cuenta de que no lo ha copiado.
+   */
+  function copiar(texto: string): void {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(codigo).finally(marcar);
+      navigator.clipboard.writeText(texto).catch(() => respaldo(texto));
     } else {
-      const t = document.createElement('textarea');
-      t.value = codigo; t.style.position = 'fixed'; t.style.opacity = '0';
-      document.body.appendChild(t); t.select();
-      try { document.execCommand('copy'); } catch {}
-      t.remove(); marcar();
+      respaldo(texto);
     }
+  }
+
+  function respaldo(texto: string): void {
+    const t = document.createElement('textarea');
+    t.value = texto;
+    t.style.position = 'fixed';
+    t.style.opacity = '0';
+    document.body.appendChild(t);
+    t.select();
+    try { document.execCommand('copy'); } catch { /* nada que hacer */ }
+    t.remove();
+  }
+
+  document.addEventListener('click', (e) => {
+    const objetivo = e.target as HTMLElement;
+    const boton = objetivo.closest('.ticket__copiar');
+    const enlace = objetivo.closest('.ticket__ir');
+    if (!boton && !enlace) return;
+
+    const ticket = objetivo.closest('.ticket') as HTMLElement | null;
+    if (!ticket) return;
+    const codigo = ticket.dataset.codigo ?? '';
+    copiar(codigo);
+
+    const btn = ticket.querySelector('.ticket__copiar');
+    if (!btn) return;
+    ticket.classList.add('copiado');
+    btn.textContent = '¡Copiado!';
+    setTimeout(() => {
+      ticket.classList.remove('copiado');
+      btn.textContent = 'Copiar';
+    }, 2000);
   });
 </script>

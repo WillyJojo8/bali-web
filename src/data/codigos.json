@@ -1,5 +1,5 @@
 [
-  { "id": "mypug15", "marca": "My Pug & Co.", "valor": "15", "unidad": "% dto", "codigo": "BALI15", "que": "Arneses y correas, en toda la web", "url": "https://ejemplo.com", "destacado": true, "activo": true },
-  { "id": "tienda-snacks", "marca": "Nombre tienda", "valor": "10", "unidad": "% dto", "codigo": "BALI10", "que": "Snacks y premios naturales", "url": "https://ejemplo.com", "destacado": false, "activo": true },
-  { "id": "tienda-primer-pedido", "marca": "Nombre tienda", "valor": "5", "unidad": "€ menos", "codigo": "BALI5", "que": "En tu primer pedido", "url": "https://ejemplo.com", "destacado": false, "activo": true }
+  { "id": "mypug15", "marca": "My Pug & Co.", "valor": "15", "unidad": "% dto", "codigo": "BALI15", "que": "Arneses y correas, en toda la web", "url": "https://ejemplo.com", "categoria": "accesorios", "caduca": null, "verificado_en": "2026-08-01", "destacado": true, "activo": true },
+  { "id": "tienda-snacks", "marca": "Nombre tienda", "valor": "10", "unidad": "% dto", "codigo": "BALI10", "que": "Snacks y premios naturales", "url": "https://ejemplo.com", "categoria": "comida", "caduca": null, "verificado_en": "2026-07-28", "destacado": false, "activo": true },
+  { "id": "tienda-primer-pedido", "marca": "Nombre tienda", "valor": "5", "unidad": "€ menos", "codigo": "BALI5", "que": "En tu primer pedido", "url": "https://ejemplo.com", "categoria": "otros", "caduca": null, "verificado_en": "2026-07-28", "destacado": false, "activo": true }
 ]

@@ -1,0 +1,48 @@
+---
+/**
+ * Preguntas frecuentes.
+ *
+ * Se pintan con <details>, que abre y cierra sin una línea de JavaScript.
+ * El texto está en el HTML aunque esté cerrado, así que Google lo lee — que
+ * es justo lo que hace falta para que el JSON-LD de tipo FAQPage sea
+ * legítimo: lo que se marca tiene que estar visible en la página.
+ */
+interface Props {
+  preguntas: { p: string; r: string }[];
+  titulo?: string;
+  gancho?: string;
+}
+const { preguntas, titulo = 'PREGUNTAS', gancho = 'Lo que suele preguntar la gente' } = Astro.props;
+---
+{preguntas.length > 0 && (
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">{gancho}</p>
+        <h2 class="display">{titulo}</h2>
+      </div>
+    </div>
+    <div class="faq">
+      {preguntas.map((x, i) => (
+        <details open={i === 0}>
+          <summary>{x.p}</summary>
+          <p>{x.r}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .faq{display:flex;flex-direction:column;gap:8px}
+  details{background:var(--card);border-radius:12px;overflow:hidden}
+  summary{
+    cursor:pointer;padding:15px 18px;font-weight:600;font-size:15.5px;
+    list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";font-family:"Space Mono",monospace;color:var(--tang);font-size:19px}
+  details[open] summary::after{content:"−"}
+  summary:hover{background:var(--card-2)}
+  details p{margin:0;padding:0 18px 17px;color:var(--cream-dim);font-size:15px}
+</style>

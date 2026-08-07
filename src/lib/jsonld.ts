@@ -113,7 +113,7 @@ export function tiendaConOfertas(base: URL | undefined, t: Tienda): Nodo {
   };
 }
 
-export function articulo(base: URL | undefined, p: Post, perfil: any): Nodo {
+export function articulo(base: URL | undefined, p: Post): Nodo {
   const raiz = abs(base, '/');
   return {
     '@type': 'BlogPosting',
@@ -146,7 +146,7 @@ export function faq(preguntas: { p: string; r: string }[]): Nodo {
  * Una opinión sobre un producto. La nota es la que se ve en la página:
  * inventarla aquí sería justo lo que Google penaliza.
  */
-export function producto(base: URL | undefined, o: Opinion, perfil: any): Nodo {
+export function producto(base: URL | undefined, o: Opinion): Nodo {
   const raiz = abs(base, '/');
   return {
     '@type': 'Product',

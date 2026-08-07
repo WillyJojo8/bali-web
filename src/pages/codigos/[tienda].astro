@@ -1,0 +1,117 @@
+---
+import Base from '../../layouts/Base.astro';
+import TicketCodigo from '../../components/TicketCodigo.astro';
+import TarjetaPost from '../../components/TarjetaPost.astro';
+import HuecoAnuncio from '../../components/HuecoAnuncio.astro';
+import Faq from '../../components/Faq.astro';
+import { getTienda, getPosts } from '../../lib/contenido';
+import { faqTienda, slug } from '../../lib/seo';
+import { tiendaConOfertas, faq } from '../../lib/jsonld';
+import { mesActual } from '../../lib/fechas';
+
+export const prerender = false;
+
+/**
+ * Una página por tienda. Es la que se posiciona para "cupón descuento
+ * <tienda>", que es una búsqueda con mucha menos competencia que "cupones
+ * para perros" y con muchísima más intención de compra: quien la escribe ya
+ * tiene el carrito lleno.
+ */
+const tienda = await getTienda(Astro.params.tienda!);
+if (!tienda) return new Response(null, { status: 404, statusText: 'Tienda no encontrada' });
+
+const mejor = tienda.mejor;
+const dto = mejor.unidad.includes('€') ? `${mejor.valor}€` : `${mejor.valor}%`;
+const mes = mesActual();
+
+const titulo = `Código descuento ${tienda.nombre}: ${dto} · ${mes}`;
+const descripcion =
+  `${tienda.cupones.length} ${tienda.cupones.length === 1 ? 'cupón' : 'cupones'} de descuento de ` +
+  `${tienda.nombre} comprobados en ${mes}. El mejor, ${dto} de descuento. Copia el código y aplícalo en tu pedido.`;
+
+const preguntas = faqTienda(tienda.nombre, mejor.valor, mejor.unidad, tienda.cupones.length);
+
+/** Entradas del blog que hablan de esta tienda: enlaces internos que ayudan a las dos páginas. */
+const posts = await getPosts();
+const relacionados = posts
+  .filter((p) =>
+    slug(p.titulo).includes(tienda.slug) ||
+    (p.etiquetas ?? []).some((e) => slug(e) === tienda.slug),
+  )
+  .slice(0, 3);
+
+const esquema = [tiendaConOfertas(Astro.site, tienda), faq(preguntas)];
+---
+<Base
+  titulo={titulo}
+  descripcion={descripcion}
+  miga={[
+    { nombre: 'Códigos', url: '/codigos/' },
+    { nombre: tienda.nombre, url: `/codigos/${tienda.slug}/` },
+  ]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Cupones verificados · {mes}</p>
+    <h1 class="display">CÓDIGO DESCUENTO<br /><em>{tienda.nombre}</em></h1>
+    <p class="entradilla">
+      {tienda.cupones.length === 1
+        ? `Hay 1 código de descuento activo de ${tienda.nombre}: ${dto} de descuento.`
+        : `Hay ${tienda.cupones.length} códigos de descuento activos de ${tienda.nombre}. El mejor es de ${dto}.`}
+      {' '}Los compruebo a mano cada semana, así que si sale aquí es que funciona hoy.
+      Tócalo para copiarlo y pégalo en el carrito antes de pagar.
+    </p>
+    <p class="aviso">
+      Algunos enlaces a {tienda.nombre} son de afiliado: si compras con el código,
+      Bali se lleva una comisión y a ti no te cuesta más.
+    </p>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Toca y se copia solo</p>
+        <h2 class="display">CÓDIGOS</h2>
+      </div>
+      <span class="seccion__meta">{tienda.cupones.length} activos</span>
+    </div>
+    <div class="lista">
+      {tienda.cupones.map((c) => <TicketCodigo {...c} enlaceTienda={false} />)}
+    </div>
+  </section>
+
+  <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+
+  {relacionados.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Lo que hemos probado</p>
+          <h2 class="display">EN EL BLOG</h2>
+        </div>
+      </div>
+      <div class="lista">
+        {relacionados.map((p) => (
+          <TarjetaPost url={`/blog/${p.slug}/`} titulo={p.titulo} resumen={p.resumen}
+            fecha={p.fecha} portada={p.portada_url} portadaAlt={p.portada_alt} etiquetas={p.etiquetas} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <Faq preguntas={preguntas} gancho={`Sobre los cupones de ${tienda.nombre}`} />
+
+  <p class="volver"><a href="/codigos/">← Todos los cupones para perros</a></p>
+</Base>
+
+<style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(28px,7.4vw,46px);margin:8px 0 0}
+  .cabecera h1 em{font-style:normal;color:var(--pink)}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 22px;max-width:56ch}
+  .lista{display:flex;flex-direction:column;gap:14px}
+  .volver{margin-top:12px}
+  .volver a{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--cream-dim);text-decoration:none}
+  .volver a:hover{color:var(--tang)}
+</style>

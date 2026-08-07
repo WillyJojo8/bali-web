@@ -2,39 +2,221 @@
 import Base from '../layouts/Base.astro';
 import TicketCodigo from '../components/TicketCodigo.astro';
 import HuecoAnuncio from '../components/HuecoAnuncio.astro';
-import { getCupones } from '../lib/contenido';
+import Faq from '../components/Faq.astro';
+import { getCupones, getTiendas } from '../lib/contenido';
+import { CATEGORIAS, FAQ_CODIGOS, slug } from '../lib/seo';
+import { listaOfertas, faq } from '../lib/jsonld';
+import { mesActual } from '../lib/fechas';
 
 export const prerender = false;
+
 const cupones = await getCupones();
+const tiendas = await getTiendas(cupones);
+
+/** Solo se pintan los filtros de categorías que tienen algún cupón. */
+const usadas = new Set(cupones.map((c) => c.categoria ?? 'otros'));
+const categorias = CATEGORIAS.filter((c) => usadas.has(c.id));
+
+const mes = mesActual();
+const titulo = `Cupones de descuento para perros · ${mes}`;
+const descripcion =
+  `${cupones.length} códigos de descuento comprobados para tiendas de perros: accesorios, ` +
+  `pienso, juguetes y peluquería. Copia el cupón y ahorra en tu pedido. Actualizado en ${mes}.`;
+
+const esquema = [
+  listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.marca)}/`),
+  faq(FAQ_CODIGOS),
+];
 ---
-<Base titulo="Códigos de descuento" descripcion="Todos los códigos de descuento activos de Bali.">
-  <section class="seccion">
-    <div class="seccion__head">
-      <div>
-        <p class="eyebrow">Toca y se copia solo</p>
-        <h2 class="display">CÓDIGOS</h2>
-      </div>
-      <span class="seccion__meta">{cupones.length} activos</span>
-    </div>
+<Base
+  titulo={titulo}
+  descripcion={descripcion}
+  miga={[{ nombre: 'Códigos', url: '/codigos/' }]}
+  esquema={esquema}
+>
+  <section class="seccion cabecera">
+    <p class="eyebrow">Actualizado en {mes}</p>
+    <h1 class="display">CUPONES DE DESCUENTO PARA PERROS</h1>
+    <p class="entradilla">
+      Todos los códigos de descuento que Bali tiene con tiendas de perros:
+      arneses, correas, pienso, snacks, juguetes y peluquería. Los reviso cada
+      semana y cada uno lleva la fecha de la última comprobación — si aparece
+      aquí, funciona. Toca el código y se copia solo.
+    </p>
 
     <p class="aviso">
       Algunos enlaces son de afiliado: si compras usando el código, Bali se lleva
       una comisión sin que a ti te cueste más.
     </p>
+  </section>
+
+  <section class="seccion" id="lista">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Toca y se copia solo</p>
+        <h2 class="display">CÓDIGOS</h2>
+      </div>
+      <span class="seccion__meta" id="cuenta">{cupones.length} activos</span>
+    </div>
 
     {cupones.length === 0 ? (
-      <p class="vacio">Ahora mismo no hay ningún código activo.</p>
+      <p class="vacio">Ahora mismo no hay ningún código activo. Vuelve en unos días.</p>
     ) : (
-      <div class="lista">
-        {cupones.map((c) => <TicketCodigo {...c} />)}
-      </div>
+      <>
+        <div class="filtros">
+          <label class="buscador">
+            <span class="visually-hidden">Buscar entre los cupones</span>
+            <input
+              type="search"
+              id="buscar"
+              placeholder="Buscar tienda o producto…"
+              autocomplete="off"
+              enterkeyhint="search"
+            />
+          </label>
+          <div class="chips" role="group" aria-label="Filtrar por categoría">
+            <button class="chip on" type="button" data-cat="">Todo</button>
+            {categorias.map((c) => (
+              <button class="chip" type="button" data-cat={c.id}>{c.emoji} {c.nombre}</button>
+            ))}
+          </div>
+        </div>
+
+        <div class="lista" id="lista-cupones">
+          {cupones.map((c) => <TicketCodigo {...c} />)}
+        </div>
+
+        <p class="vacio" id="sin-resultados" hidden>
+          Ningún cupón coincide con lo que buscas. Prueba con el nombre de la tienda.
+        </p>
+      </>
     )}
   </section>
 
   <HuecoAnuncio slot={import.meta.env.PUBLIC_ADSENSE_SLOT_LISTADO} />
+
+  {tiendas.length > 0 && (
+    <section class="seccion">
+      <div class="seccion__head">
+        <div>
+          <p class="eyebrow">Una página por tienda</p>
+          <h2 class="display">TIENDAS</h2>
+        </div>
+        <a class="seccion__meta" href="/tiendas/">Ver todas →</a>
+      </div>
+      <ul class="tiendas">
+        {tiendas.slice(0, 12).map((t) => (
+          <li>
+            <a href={`/codigos/${t.slug}/`}>
+              {t.nombre}
+              <span>{t.cupones.length} {t.cupones.length === 1 ? 'código' : 'códigos'}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section class="seccion">
+    <div class="seccion__head">
+      <div>
+        <p class="eyebrow">Cómo funciona</p>
+        <h2 class="display">EN 3 PASOS</h2>
+      </div>
+    </div>
+    <ol class="pasos">
+      <li><strong>Copia el código.</strong> Toca el botón «Copiar» del cupón que te interese.</li>
+      <li><strong>Entra en la tienda.</strong> Desde el enlace del propio cupón, que ya lleva el seguimiento puesto.</li>
+      <li><strong>Pégalo antes de pagar.</strong> En la casilla de «cupón» o «código promocional» del carrito.</li>
+    </ol>
+  </section>
+
+  <Faq preguntas={FAQ_CODIGOS} />
 </Base>
 
 <style>
+  .cabecera{margin-top:36px}
+  .cabecera h1{font-size:clamp(30px,7.6vw,50px);margin:8px 0 0}
+  .entradilla{color:var(--cream-dim);font-size:16px;margin:16px 0 22px;max-width:56ch}
+
+  .filtros{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+  .buscador input{
+    width:100%;font-size:16px;padding:13px 16px;border-radius:12px;
+    background:var(--bg-2);border:1px solid var(--linea);color:var(--cream);
+    font-family:inherit;
+  }
+  .buscador input::placeholder{color:rgba(198,168,149,.7)}
+  .buscador input:focus{border-color:var(--tang);outline:none}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .chip{
+    font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--linea);color:var(--cream-dim);
+    border-radius:100px;padding:8px 13px;white-space:nowrap;cursor:pointer;
+  }
+  .chip:hover{color:var(--cream);border-color:rgba(255,243,233,.3)}
+  .chip.on{background:var(--cream);color:var(--bg);border-color:var(--cream);font-weight:700}
+
   .lista{display:flex;flex-direction:column;gap:14px}
   .vacio{color:var(--cream-dim)}
+
+  .tiendas{list-style:none;padding:0;margin:0;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .tiendas a{display:flex;flex-direction:column;gap:2px;background:var(--card);
+    border-radius:12px;padding:13px 15px;text-decoration:none;font-weight:600;font-size:15px}
+  .tiendas a:hover{background:var(--card-2);color:var(--tang)}
+  .tiendas span{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--cream-dim);font-weight:400}
+
+  .pasos{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px;color:var(--cream-dim)}
+  .pasos strong{color:var(--cream)}
+
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
+
+<script>
+  /**
+   * Buscador y filtros. Todo en el cliente: los cupones ya están en el HTML,
+   * así que filtrar es enseñar y esconder. Sin peticiones, sin esperas, y
+   * Google sigue viendo la lista completa.
+   */
+  const caja = document.getElementById('buscar') as HTMLInputElement | null;
+  const lista = document.getElementById('lista-cupones');
+  const cuenta = document.getElementById('cuenta');
+  const sinNada = document.getElementById('sin-resultados');
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+
+  if (lista) {
+    const tickets = [...lista.querySelectorAll<HTMLElement>('.ticket')];
+    let categoria = '';
+
+    /** Sin acentos y en minúsculas: buscar "arnes" tiene que encontrar "arnés". */
+    const normaliza = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    function filtrar(): void {
+      const texto = normaliza(caja?.value.trim() ?? '');
+      let visibles = 0;
+
+      for (const t of tickets) {
+        const coincideTexto = !texto || normaliza(t.dataset.busqueda ?? '').includes(texto);
+        const coincideCat = !categoria || t.dataset.categoria === categoria;
+        const ver = coincideTexto && coincideCat;
+        t.hidden = !ver;
+        if (ver) visibles++;
+      }
+
+      if (cuenta) cuenta.textContent = `${visibles} ${visibles === 1 ? 'activo' : 'activos'}`;
+      if (sinNada) sinNada.hidden = visibles > 0;
+    }
+
+    caja?.addEventListener('input', filtrar);
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        for (const otro of chips) otro.classList.toggle('on', otro === chip);
+        categoria = chip.dataset.cat ?? '';
+        filtrar();
+      });
+    }
+  }
+</script>

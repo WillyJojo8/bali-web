@@ -90,6 +90,35 @@ export function categoria(id: string | null | undefined): Categoria {
  * alto en la página de resultados. Por eso las respuestas son cortas:
  * las largas se cortan con puntos suspensivos.
  */
+/**
+ * Preguntas de la página de una tienda concreta.
+ *
+ * Se generan con el nombre dentro a propósito: si todas las tiendas
+ * repitieran el mismo texto, Google trataría las páginas como duplicadas y
+ * dejaría de indexarlas.
+ */
+export function faqTienda(tienda: string, valor: string, unidad: string, cuantos: number) {
+  const dto = unidad.includes('€') ? `${valor}€` : `${valor}%`;
+  return [
+    {
+      p: `¿Cuál es el mejor código de descuento de ${tienda}?`,
+      r: `Ahora mismo el mejor es de ${dto}. Está el primero de esta página, con la fecha en la que se comprobó por última vez que funciona.`,
+    },
+    {
+      p: `¿Cómo aplico un cupón de ${tienda}?`,
+      r: `Copia el código desde aquí, entra en ${tienda} y pégalo en la casilla de "cupón" o "código promocional" del carrito, antes de terminar el pedido.`,
+    },
+    {
+      p: `¿Cuántos cupones de ${tienda} hay activos?`,
+      r: `${cuantos} ${cuantos === 1 ? 'código activo' : 'códigos activos'}. Los caducados se retiran solos el mismo día en que dejan de valer, así que aquí no vas a encontrar ninguno que no funcione.`,
+    },
+    {
+      p: `¿Se pueden juntar dos códigos de ${tienda}?`,
+      r: 'Casi ninguna tienda lo permite: se aplica uno por pedido. Si tienes varios, prueba el de mayor descuento sobre el total de tu carrito.',
+    },
+  ];
+}
+
 export const FAQ_CODIGOS = [
   {
     p: '¿Cómo uso un código de descuento?',
