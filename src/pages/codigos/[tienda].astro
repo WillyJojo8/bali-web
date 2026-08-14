@@ -64,12 +64,9 @@ const esquema = [tiendaConOfertas(Astro.site, tienda), faq(preguntas)];
       {cuantos === 1
         ? `Hay 1 código de descuento activo de ${tienda.nombre}${dto ? `: ${dto} de descuento.` : '.'}`
         : `Hay ${cuantos} códigos de descuento activos de ${tienda.nombre}.${dto ? ` El mejor es de ${dto}.` : ''}`}
-      {' '}Los compruebo a mano cada semana, así que si sale aquí es que funciona hoy.
-      Tócalo para copiarlo y pégalo en el carrito antes de pagar.
     </p>
     <p class="aviso">
-      Algunos enlaces a {tienda.nombre} son de afiliado: si compras con el código,
-      Bali se lleva una comisión y a ti no te cuesta más.
+      Enlaces de afiliado a {tienda.nombre}: si compras, Bali cobra comisión y a ti no te cuesta más.
     </p>
   </section>
 

@@ -34,15 +34,12 @@ const esquema = [listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.mar
     <p class="eyebrow">Actualizado en {mes}</p>
     <h1 class="display">CUPONES DE DESCUENTO PARA PERROS</h1>
     <p class="entradilla">
-      Todos los códigos de descuento que Bali tiene con tiendas de perros:
-      arneses, correas, pienso, snacks, juguetes y peluquería. Los reviso cada
-      semana y cada uno lleva la fecha de la última comprobación — si aparece
-      aquí, funciona. Toca el código y se copia solo.
+      Códigos de descuento para tiendas de perros: arneses, correas, pienso,
+      juguetes y peluquería. Cada uno lleva su fecha de comprobación.
     </p>
 
     <p class="aviso">
-      Algunos enlaces son de afiliado: si compras usando el código, Bali se lleva
-      una comisión sin que a ti te cueste más.
+      Enlaces de afiliado: si compras, Bali cobra comisión y a ti no te cuesta más.
     </p>
   </section>
 
@@ -112,20 +109,6 @@ const esquema = [listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.mar
       </ul>
     </section>
   )}
-
-  <section class="seccion">
-    <div class="seccion__head">
-      <div>
-        <p class="eyebrow">Cómo funciona</p>
-        <h2 class="display">EN 3 PASOS</h2>
-      </div>
-    </div>
-    <ol class="pasos">
-      <li><strong>Copia el código.</strong> Toca el botón «Copiar» del cupón que te interese.</li>
-      <li><strong>Entra en la tienda.</strong> Desde el enlace del propio cupón, que ya lleva el seguimiento puesto.</li>
-      <li><strong>Pégalo antes de pagar.</strong> En la casilla de «cupón» o «código promocional» del carrito.</li>
-    </ol>
-  </section>
 </Base>
 
 <style>
@@ -160,9 +143,6 @@ const esquema = [listaOfertas(Astro.site, cupones, (c) => `/codigos/${slug(c.mar
   .tiendas a:hover{background:var(--card-2);color:var(--tang)}
   .tiendas span{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--cream-dim);font-weight:400}
-
-  .pasos{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px;color:var(--cream-dim)}
-  .pasos strong{color:var(--cream)}
 
   .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
